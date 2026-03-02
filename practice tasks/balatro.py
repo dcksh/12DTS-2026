@@ -4,6 +4,12 @@
 # daksh
 # 20/2/26
 
+# last updated - 28/2/26
+# !! SO FAR !!
+# - Deals a hand to the user
+# - User may either sort the cards by rank/suit or select cards to play/discard
+# - ** So far only testing the play :(
+
 # modules
 import random
 import time
