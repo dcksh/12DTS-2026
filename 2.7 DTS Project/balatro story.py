@@ -35,6 +35,11 @@ card_selection_loop = True
 
 # constants
 SUIT = ["Hearts", "Diamonds", "Clubs", "Spades"]
+SUIT_ICON = ["♥","♦","♧","♤"]
+## 🂡 🂢 🂣 🂤 🂥 🂦 🂧 🂨 🂩 🂪 🂫 🂬 🂭 🂮
+## 🂱 🂲 🂳 🂴 🂵 🂶 🂷 🂸 🂹 🂺 🂻 🂼 🂽 🂾
+## 🃁 🃂 🃃 🃄 🃅 🃆 🃇 🃈 🃉 🃊 🃋 🃌 🃍 🃎
+## 🃑 🃒 🃓 🃔 🃕 🃖 🃗 🃘 🃙 🃚 🃛 🃜 🃝 🃞
 CARDS = ["Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Jack","Queen","King","Ace"]
 FACE_INITIALS = ["J, Q, K, A"]
 POKER_HANDS = {
@@ -54,8 +59,8 @@ POKER_HANDS = {
 } # multipliers for each hand - stored by chip addition, then chip multiplier
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small"],[1.5,"Big"],[2,"Boss"]] # multiplier based on boss
-HAND_SIZE = 32
-SELECT_HAND_SIZE = 6
+HAND_SIZE = 8
+SELECT_HAND_SIZE = 5
 
 # functions
 def blind_maker(): # makes the current blind
@@ -84,7 +89,7 @@ def new_deck(): # makes a new deck
                 card_deck.append([SUIT[j], CARDS[k], 11, k + 2]) # different for ace as ace has 11 points.
             else:
                 card_deck.append([SUIT[j], CARDS[k], 10, k+2])
-    print(card_deck) # DEBUG
+    #print(card_deck) # DEBUG
 
 
 def hand_deal(amount): # deals you the hand
@@ -125,6 +130,8 @@ def gameplay(): # main gameplay loop
                     hand.sort(key=lambda x: (x[3], [0]))
                     order_state = 1
                 for j in range(0, len(hand)): # prints out the new sorting order, loop doesnt end as they have to play first
+                    hand[j].pop(4) # this + the code below it just allows the choosing number to change as it is sorted
+                    hand[j].append(j + 1)
                     print(hand[j][4], hand[j][1], "of", hand[j][0])
 
                 time.sleep(1)
@@ -167,7 +174,6 @@ def gameplay(): # main gameplay loop
             else: # error checking
                 print("Please select either '1' or '2'!")
 
-
 def score_calculation(cards):
     chip_score = 0
     chip_mult = 0
@@ -181,7 +187,7 @@ def score_calculation(cards):
     flush_check = False
 
     cards.sort(key=lambda x: (x[3]))
-    print(cards) # DEBUG
+    #print(cards) # DEBUG
 
     for i in range(len(cards)): # sorts the deck's ranks out
         if cards[i][3] in ranks:
@@ -189,7 +195,7 @@ def score_calculation(cards):
         else:
             ranks[cards[i][3]] = 1
     ranks = dict(sorted(ranks.items(), key=lambda i: i[1]))
-    print(ranks) # DEBUG
+    #print(ranks) # DEBUG
 
     for i in range(len(cards)): # sort the hand's suits out
         if cards[i][0] in suits:
@@ -197,21 +203,21 @@ def score_calculation(cards):
         else:
             suits[cards[i][0]] = 1
     suits = dict(sorted(suits.items(), key=lambda i: i[1]))
-    print(suits) # DEBUG
+    #print(suits) # DEBUG
 
     # checks for straights - sorts the keys (using sort removes duplicates), and then checks to see if its consecutive
     # if it fails, turn to 1 and continue (take into account hands that are above 5), and if it hits 5, say straight is true
     # NEED TO UPDATE FOR HIGH AND LOW ACES!! SO FAR CAN DO HIGH!!!
     straight = sorted(ranks.keys())
-    print(straight) # DEBUG
+    #print(straight) # DEBUG
     if 14 in straight: # adds in a value of 1 if there is a straight so both high and low ace exists in the list.
         straight.append(1)
         straight.sort()
-    print(straight)  # DEBUG
+    #print(straight)  # DEBUG
     for i in range(1, len(straight)):
         if straight[i] == straight[i - 1] + 1:
             straight_count += 1
-            print(straight_count) # DEBUG
+            #print(straight_count) # DEBUG
             if straight_count >= 4:
                 straight_check = True
                 straight_count = 0
