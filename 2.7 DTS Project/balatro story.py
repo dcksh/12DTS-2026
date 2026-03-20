@@ -6,13 +6,11 @@
 
 # last updated - 10/3/26
 
+# // !! PROGRAMMER'S NOTES !! //
+# - For the best experience, please use MS Gothic or Snap ITC as your font. This is just for the card printing, as these fonts keep it even. (MS Gothic is my reccomendation)
+
 # // STORY //
 # Follows the story of Astus, a Jester from Ancient Rome.
-
-# !! SO FAR !!
-# - Deals a hand to the user
-# - User may either sort the cards by rank/suit or select cards to play/discard
-# - ** So far only testing the play :(
 
 # modules
 import random
@@ -21,6 +19,8 @@ import time
 # variables
 card_deck = []
 hand = []
+card_deck_print = ["","",""]
+
 card_number = 0
 
 anti = 0
@@ -42,6 +42,7 @@ SUIT_ICON = ["♥","♦","♧","♤"]
 ## 🃑 🃒 🃓 🃔 🃕 🃖 🃗 🃘 🃙 🃚 🃛 🃜 🃝 🃞
 CARDS = ["Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Jack","Queen","King","Ace"]
 CARD_ICONS = ["2","3","4","5","6","7","8","9","X","J","Q","K","A"]
+
 FACE_INITIALS = ["J, Q, K, A"]
 POKER_HANDS = {
     "High Card" : [5,1],
@@ -77,16 +78,12 @@ def blind_maker(): # makes the current blind
     print(BLIND_MULTIPLIERS[blind-1][1],"Blind")
     print("Score:",boss_hp)
     print()
-"|♦¯¯|"
-"| K |"
-"|__♦|"
-def card_print(suit,rank):
-    print("|"+suit+"¯¯|")
-    print("| "+rank+" |")
-    print("|__"+suit+"|")
+
+def card_print(suit,rank): # card print function, just makes things easy!
+    return(["|"+suit+"¯¯| ","| "+rank+" | ","|__"+suit+"| "])
 
 def new_deck(): # makes a new deck
-    card_deck.clear() # clear old usae
+    card_deck.clear() # clear old deck
     for i in range(1, 10): # prints out the number cards, uses for loops to make 44 of these
         for j in range(4):
             card_deck.append([SUIT[j], SUIT_ICON[j], CARDS[i - 1], CARD_ICONS[i-1], i+1, i+1])
@@ -102,6 +99,8 @@ def new_deck(): # makes a new deck
 
 
 def hand_deal(amount): # deals you the hand
+    global card_deck_print # to refer to print the cards.
+
     print(" -- HAND --")
     for i in range(0, amount): # range for the amount of times you want a card
         card = (random.randint(1, len(card_deck))) - 1
@@ -110,21 +109,31 @@ def hand_deal(amount): # deals you the hand
     hand.sort(key=lambda x: (x[5],[0])) # sorts the stuff automatically by value of card, lowest to highest followed by alphabetical order of suits
     # lambda is a key you can use for your sort function to do stuff like this ^^
     order_state = 1 # state of ordering, can order by value first or suit first (changed later)
-    for j in range(0,amount): # prints current hand
-        hand[j].append(j+1)
-        card_print(hand[j][1],hand[j][3])
+    card_deck_print = ["", "", ""]  # reset each time
+    # code below is to print the hand like the cards.
+    for j in range(0,amount):
+        hand[j].append(j+1) # used to actually refer to the cards you want to select
+        card_lines = card_print(hand[j][1], hand[j][3])  # suit icon + rank icon
+        for k in range(3):
+            card_deck_print[k] += card_lines[k] + " " # basically now, each line of the card is stored in the list to print later.
+        # print AFTER building everything
+    for l in card_deck_print: # now, this just prints each element of the card deck to make it horizontal as it is.
+        print(l)
 
 
 def gameplay(): # main gameplay loop
     # local variables and loops
     global order_state
+    global card_deck_print
     selection_list = []
     chosen_cards = []
     chips = []
+    valid_check = 0
 
     game_loop = True
     choice_loop = True
     card_selection_loop = True
+    validity = False
 
     while game_loop == True: # main game loop begin
         while choice_loop == True: # choice to either resort or select to play/refresh
@@ -138,40 +147,53 @@ def gameplay(): # main gameplay loop
                 elif order_state == 2: # opposite of above
                     hand.sort(key=lambda x: (x[5], [0]))
                     order_state = 1
-                for j in range(0, len(hand)): # prints out the new sorting order, loop doesnt end as they have to play first
-                    hand[j].pop(6) # this + the code below it just allows the choosing number to change as it is sorted
+                card_deck_print = ["", "", ""]  # reset each time
+                for j in range(0, len(hand)):  # prints current hand, code explained above
+                    hand[j].pop(6) # pop to change the order of the card so that when sorting changes, they can still play it according to order.
                     hand[j].append(j + 1)
-                    print(hand[j][1],hand[j][3])
+                    card_lines = card_print(hand[j][1], hand[j][3])  # suit icon + rank icon
+                    for k in range(3):
+                        card_deck_print[k] += card_lines[k] + " "
+                    # print AFTER building everything
+                for card in card_deck_print:
+                    print(card)
+
 
                 time.sleep(1)
             elif choice == "2": # chosen to select
                 choice_loop = False
                 while card_selection_loop == True:
+                    valid_check = 0
                     try:
-                        print("Please select the cards you want to play. (E.g. 1 3 5 7)")
+                        print("Please enter the order number of the card you'd like to select, from left to right. (E.g. 1 for the 1st card, 7 for the 7th)")
                         cards_chosen = input()
                         for i in cards_chosen.split(" ",SELECT_HAND_SIZE-1):
-                            # what this code does is takes the input e.g. "1 2 3" and seperates it into different elements in a list, each element ending at the space from " ".
-                            # strip then gets rid of extra stuff (white spaces by default) to leave it as the number alone, allowing the code to convert it into an integer
-                            # then, just adds it to the list fo selected cards
-                            selection_list.append(int(i.strip()))
-
+                            if int(i) < 1 or int(i) > len(hand):
+                                pass
+                            else:
+                                valid_check += 1
+                        if valid_check > (len(cards_chosen.split(" ",SELECT_HAND_SIZE-1))-1):
+                                # what this code does is takes the input e.g. "1 2 3" and separates it into different elements in a list, each element ending at the space from " ".
+                                # strip then gets rid of extra stuff (white spaces by default) to leave it as the number alone, allowing the code to convert it into an integer
+                                # then, just adds it to the list fo selected cards
+                            for i in cards_chosen.split(" ", SELECT_HAND_SIZE - 1):
+                                selection_list.append(int(i.strip()))
+                        else:
+                                print("Please select a valid number, from 1 to " + str(len(hand)))
                     except ValueError: # error fixing
-                        print()
-                        print("Please enter a max of",SELECT_HAND_SIZE,"cards, and refer to the number at the start!")
-                        print("E.g. if you want to pick '8 Queen of Hearts', please enter in 8, followed by the other cards you'd like!")
-                        print()
-                        selection_list.clear() # clears as even upon error the append happens sometimes (depending on the error), so clear it to make ti easy
+                        print("Please enter a max of",SELECT_HAND_SIZE,"cards, and refer to the order of the card")
+                        print("E.g. if you want to pick a card that is 5th from the left, please enter in 5, followed by the other cards you'd like!")
+                        selection_list.clear() # clears as even upon error, the append happens sometimes (depending on the error), so clear it to make it easy
 
                     # code to now place these selected cards into another list of chosen cards to play
                     # this code checks the order of the card in the hand, and compares it to the number the player chose and then looks for the right card
                     # after finding the card, it adds it to the list and moves on to look for the next card
-                    if len(selection_list) > SELECT_HAND_SIZE or len(selection_list) < 1:
-                        print("Please pick up to",SELECT_HAND_SIZE,"cards!")
+                    if len(selection_list) > SELECT_HAND_SIZE or len(selection_list) < 1: # to make sure they pick 1-howevermanythelimitisonly
+                        print("Please pick up to",SELECT_HAND_SIZE,"valid cards!")
                     else:
-                        for i in range(0, len(selection_list)):
+                        for i in range(0, len(selection_list)): # this code basically searches for the card you pick!
                             finding_card_loop = True
-                            while finding_card_loop == True:
+                            while finding_card_loop == True: # while the loop goes on, it checks for when the chosen number = the number of the card, then stops
                                 for j in range(0,len(hand)):
                                     find_chosen_card = hand[j][6]
                                     if find_chosen_card == selection_list[i]:
@@ -179,11 +201,10 @@ def gameplay(): # main gameplay loop
                                         finding_card_loop = False
                         card_selection_loop = False
                 score_calculation(chosen_cards)
-
             else: # error checking
                 print("Please select either '1' or '2'!")
 
-def score_calculation(cards):
+def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
     ranks = {}
@@ -219,11 +240,11 @@ def score_calculation(cards):
     # if it fails, turn to 1 and continue (take into account hands that are above 5), and if it hits 5, say straight is true
     # NEED TO UPDATE FOR HIGH AND LOW ACES!! SO FAR CAN DO HIGH!!!
     straight = sorted(ranks.keys())
-    print(straight) # DEBUG
+    #print(straight) # DEBUG
     if 14 in straight: # adds in a value of 1 if there is a straight so both high and low ace exists in the list.
         straight.append(1)
         straight.sort()
-    print(straight)  # DEBUG
+    #print(straight)  # DEBUG
     for i in range(1, len(straight)):
         if straight[i] == straight[i - 1] + 1:
             straight_count += 1
@@ -242,7 +263,7 @@ def score_calculation(cards):
     if 14 in straight and 13 in straight and 12 in straight and 11 in straight and 10 in straight:
         royal_check = True
 
-    # checks for full house - used separately due to the weird clatter of arguements which will be neater to put under a check here.
+    # checks for full house - used separately due to the weird clatter of arguments which will be neater to put under a check here.
     if 3 in ranks.values() and (2 in ranks.values() or list(ranks.values()).count(3) >= 2):
         full_house_check = True
 
@@ -342,8 +363,3 @@ new_deck()
 hand_deal(HAND_SIZE)
 time.sleep(1)
 gameplay()
-
-"|♦¯¯|"
-"| K |"
-"|__♦|"
-
