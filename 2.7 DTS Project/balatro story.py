@@ -61,8 +61,8 @@ POKER_HANDS = {
 } # multipliers for each hand - stored by chip addition, then chip multiplier
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small"],[1.5,"Big"],[2,"Boss"]] # multiplier based on boss
-HAND_SIZE = 20
-SELECT_HAND_SIZE = 5
+HAND_SIZE = 30
+SELECT_HAND_SIZE = 6
 
 # functions
 def blind_maker(): # makes the current blind
@@ -201,10 +201,8 @@ def gameplay(): # main gameplay loop
                                         finding_card_loop = False
                         card_selection_loop = False
                 score_calculation(chosen_cards)
-
             else: # error checking
                 print("Please select either '1' or '2'!")
-
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
@@ -212,14 +210,19 @@ def score_calculation(cards): # whole function to calculate the scorings!
     suits = {}
     scored_cards = []
     straight = []
-    straight_count = 0
+    straight_count = []
+    straight_scored = []
+    flush_suit = ""
+    flush_scored = []
+    house_pair_ranks = []
+    of_a_kind_ranks = 0
     straight_check = False
     royal_check = False
     full_house_check = False
     flush_check = False
 
     cards.sort(key=lambda x: (x[5]))
-    print(cards) # DEBUG
+    #print(cards) # DEBUG
 
     for i in range(len(cards)): # sorts the deck's ranks out
         if cards[i][5] in ranks:
@@ -227,7 +230,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         else:
             ranks[cards[i][5]] = 1
     ranks = dict(sorted(ranks.items(), key=lambda i: i[1]))
-    print(ranks) # DEBUG
+    #print(ranks) # DEBUG
 
     for i in range(len(cards)): # sort the hand's suits out
         if cards[i][0] in suits:
@@ -235,40 +238,46 @@ def score_calculation(cards): # whole function to calculate the scorings!
         else:
             suits[cards[i][0]] = 1
     suits = dict(sorted(suits.items(), key=lambda i: i[1]))
-    print(suits) # DEBUG
+    #print(suits) # DEBUG
 
     # checks for straights - sorts the keys (using sort removes duplicates), and then checks to see if its consecutive
+    # also does the scoring for all straight hands!
     # if it fails, turn to 1 and continue (take into account hands that are above 5), and if it hits 5, say straight is true
-    # NEED TO UPDATE FOR HIGH AND LOW ACES!! SO FAR CAN DO HIGH!!!
     straight = sorted(ranks.keys())
     #print(straight) # DEBUG
     if 14 in straight: # adds in a value of 1 if there is a straight so both high and low ace exists in the list.
-        straight.append(1)
-        straight.sort()
-    print(straight)  # DEBUG
+        straight.insert(0,1)
+    #print(straight)  # DEBUG
     for i in range(1, len(straight)):
-        if straight[i] == straight[i - 1] + 1:
-            straight_count += 1
-            for j in range(1,len(cards)): # MESSY STUFF HERE IN PROGRESS!!
-                if straight[i-1] not in scored_cards:
-                    if straight[i-1] == cards[j-1][5]:
-                        scored_cards.append(cards[j-1][4])
-                if straight[i] == cards[j][5]:
-                    scored_cards.append(cards[j][4])
+        if straight[i-1] not in straight_count:
+            straight_count.append(straight[i-1]) # adds that number to the straight list, makes it easy to refer to the score cards later
+        if straight[i] == straight[i - 1] + 1: # to add element 1 to the list also
+            straight_count.append(straight[i])
             #print(straight_count) # DEBUG
-            if straight_count >= 4:
-                for j in range(0, len(cards)):
-                    if straight[i] == cards[j][5]:
-                        scored_cards.append(cards[j][4])
-                straight_check = True
-                straight_count = 0
-                break  # stops loop once straight is found
-        else:
-            straight_count = 0
+            if len(straight_count) >= 5: # if it hits above 5!
+                straight_check = True # dont break incase of 5+ card hand
+        elif straight[i] != 14:
+            straight_count = [straight[i]] # if it doesnt hit straight, start new run with this
+    if 1 in straight_count:
+        straight_count.pop(0)
+        straight_count.insert(0,14)
+    for i in range(0, len(straight_count)):
+        for j in range(0, len(cards)): # this is for scoring, checks what card it is then pulls out the score value for it and adds it to scored cards!
+            if cards[j][5] == straight_count[i]:
+                straight_scored.append(cards[j][5]) # add to straight score! this is seperated to avoid dupe glitches
 
     # checks for flushh
     if max(suits.values()) >= 5:
         flush_check = True
+
+    for i in suits:
+        if suits[i] >= 5: # if the suit is 5+ its a flush
+            flush_suit = i # set suit as it
+            break
+    print(flush_suit)
+    for i in cards: # gets each card
+        if i[0] == flush_suit: # if the suit if it is the same
+            flush_scored.append(i[4]) # add to flush score! this is seperated to avoid dupe glitches
 
     # checks for royalty - just use for royal flush
     if 14 in straight and 13 in straight and 12 in straight and 11 in straight and 10 in straight:
@@ -278,6 +287,16 @@ def score_calculation(cards): # whole function to calculate the scorings!
     if 3 in ranks.values() and (2 in ranks.values() or list(ranks.values()).count(3) >= 2):
         full_house_check = True
 
+    for i in ranks:
+        if ranks[i] == max(ranks.values()):
+            of_a_kind_ranks = i
+        if ranks[i] >= 2:
+            house_pair_ranks.append(i)
+
+    #print(of_a_kind_ranks) # DEBUG
+    #print(house_pair_ranks) # DEBUG
+
+    # HAND CALCULATIONS
     if flush_check == True and max(ranks.values()) == 5:  # FLUSH FIVE - Five cards of the same rank and suit // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush Five"][0]
         chip_mult += POKER_HANDS["Flush Five"][1]
@@ -296,17 +315,32 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         print("Five of a Kind")
 
-    elif max(suits.values()) == 5 and straight_check == True and royal_check == True: # ROYAL FLUSH - Flush by A K Q J 10 // straight check is unneeded but just in case...
+        for i in cards:
+            if i[5] == of_a_kind_ranks:
+                scored_cards.append(i[4])
+                print("Scored", i[1], i[3])
+
+    elif max(suits.values()) >= 5 and straight_check == True and royal_check == True: # ROYAL FLUSH - Flush by A K Q J 10 // straight check is unneeded but just in case...
         chip_score += POKER_HANDS["Royal Flush"][0]
         chip_mult += POKER_HANDS["Royal Flush"][1]
-
         print("Royal Flush!")
 
-    elif straight_check == True and max(suits.values()) == 5:  # STRAIGHT FLUSH - Straight + Flush
+        for i in range(0,len(straight_scored)):
+            for j in range(0,len(cards)):
+                if straight_scored[i] == cards[j][5]:
+                    scored_cards.append(cards[j][4])
+                    print("Scored",cards[j][1],cards[j][3])
+
+    elif straight_check == True and flush_check == True:  # STRAIGHT FLUSH - Straight + Flush
         chip_score += POKER_HANDS["Straight Flush"][0]
         chip_mult += POKER_HANDS["Straight Flush"][1]
-
         print("Straight Flush!")
+
+        for i in range(0,len(straight_scored)):
+            for j in range(0,len(cards)):
+                if straight_scored[i] == cards[j][5]:
+                    scored_cards.append(cards[j][4])
+                    print("Scored",cards[j][1],cards[j][3])
 
     elif max(ranks.values()) == 4:  # FOUR OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Four of a Kind"][0]
@@ -314,23 +348,44 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         print("Four of a Kind!")
 
+        for i in cards:
+            if i[5] == of_a_kind_ranks:
+                scored_cards.append(i[4])
+                print("Scored", i[1], i[3])
+
     elif full_house_check == True: # FULL HOUSE - Three of a kind + Two of a kind // ADD CHIP SCORING
         chip_score += POKER_HANDS["Full House"][0]
         chip_mult += POKER_HANDS["Full House"][1]
 
         print("Full House")
 
+        for i in cards:
+            for j in house_pair_ranks:
+                if i[5] == j:
+                    scored_cards.append(i[4])
+                    print("Scored", i[1], i[3])
+
     elif max(suits.values()) == 5:  # FLUSH - All cards have 1 suit
         chip_score += POKER_HANDS["Flush"][0]
         chip_mult += POKER_HANDS["Flush"][1]
-
         print("Flush!")
+
+        for i in range(0,len(flush_scored)):
+            scored_cards.append(flush_scored[i])
+            for j in range(0,len(cards)):
+                if flush_scored[i] == cards[j][4]:
+                    print("Scored",cards[j][1],cards[j][3])
 
     elif straight_check == True:  # STRAIGHT - All cards are consecutive. Order - A K Q J 10... 3 2 A
         chip_score += POKER_HANDS["Straight"][0]
         chip_mult += POKER_HANDS["Straight"][1]
-
         print("Straight!")
+
+        for i in range(0,len(straight_scored)):
+            for j in range(0,len(cards)):
+                if straight_scored[i] == cards[j][5]:
+                    scored_cards.append(cards[j][4])
+                    print("Scored",cards[j][1],cards[j][3])
 
     elif max(ranks.values()) == 3:  # THREE OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Three of a Kind"][0]
@@ -338,11 +393,22 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         print("Three of a Kind!")
 
+        for i in cards:
+            if i[5] == of_a_kind_ranks:
+                scored_cards.append(i[4])
+                print("Scored", i[1], i[3])
+
     elif list(ranks.values()).count(2) >= 2: # TWO PAIR // ADD CHIP SCORING
         chip_score += POKER_HANDS["Two Pair"][0]
         chip_mult += POKER_HANDS["Two Pair"][1]
 
         print("Two Pair!")
+
+        for i in cards:
+            for j in house_pair_ranks:
+                if i[5] == j:
+                    scored_cards.append(i[4])
+                    print("Scored", i[1], i[3])
 
     elif max(ranks.values()) == 2:  # PAIR // ADD CHIP SCORING
         chip_score += POKER_HANDS["Pair"][0]
@@ -350,15 +416,20 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         print("Pair!")
 
+        for i in cards:
+            if i[5] == of_a_kind_ranks:
+                scored_cards.append(i[4])
+                print("Scored", i[1], i[3])
+
     elif max(ranks.values()) == 1:  # HIGH CARD // ADD CHIP SCORING
         chip_score += POKER_HANDS["High Card"][0]
         chip_mult += POKER_HANDS["High Card"][1]
-
         print("High Card!")
 
-        scored_cards.append(cards[len(cards)-1][4]) # high card only scores one!
-
-        print("Scored",cards[len(cards)-1][1],cards[len(cards)-1][3],"!")
+        for i in cards:
+            if i[5] == of_a_kind_ranks:
+                scored_cards.append(i[4])
+                print("Scored", i[1], i[3])
 
     print(scored_cards) # DEBUG
     for i in range(0,len(scored_cards)):
