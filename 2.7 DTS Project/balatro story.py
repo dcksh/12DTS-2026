@@ -61,7 +61,7 @@ POKER_HANDS = {
 } # multipliers for each hand - stored by chip addition, then chip multiplier
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small"],[1.5,"Big"],[2,"Boss"]] # multiplier based on boss
-HAND_SIZE = 8
+HAND_SIZE = 20
 SELECT_HAND_SIZE = 5
 
 # functions
@@ -166,17 +166,17 @@ def gameplay(): # main gameplay loop
                     valid_check = 0
                     try:
                         print("Please enter the order number of the card you'd like to select, from left to right. (E.g. 1 for the 1st card, 7 for the 7th)")
-                        cards_chosen = input()
-                        for i in cards_chosen.split(" ",SELECT_HAND_SIZE-1):
+                        choose_cards = input()
+                        for i in choose_cards.split(" ",SELECT_HAND_SIZE-1):
                             if int(i) < 1 or int(i) > len(hand):
                                 pass
                             else:
                                 valid_check += 1
-                        if valid_check > (len(cards_chosen.split(" ",SELECT_HAND_SIZE-1))-1):
+                        if valid_check > (len(choose_cards.split(" ",SELECT_HAND_SIZE-1))-1):
                                 # what this code does is takes the input e.g. "1 2 3" and separates it into different elements in a list, each element ending at the space from " ".
                                 # strip then gets rid of extra stuff (white spaces by default) to leave it as the number alone, allowing the code to convert it into an integer
                                 # then, just adds it to the list fo selected cards
-                            for i in cards_chosen.split(" ", SELECT_HAND_SIZE - 1):
+                            for i in choose_cards.split(" ", SELECT_HAND_SIZE - 1):
                                 selection_list.append(int(i.strip()))
                         else:
                                 print("Please select a valid number, from 1 to " + str(len(hand)))
@@ -201,6 +201,7 @@ def gameplay(): # main gameplay loop
                                         finding_card_loop = False
                         card_selection_loop = False
                 score_calculation(chosen_cards)
+
             else: # error checking
                 print("Please select either '1' or '2'!")
 
@@ -244,18 +245,28 @@ def score_calculation(cards): # whole function to calculate the scorings!
     if 14 in straight: # adds in a value of 1 if there is a straight so both high and low ace exists in the list.
         straight.append(1)
         straight.sort()
-    #print(straight)  # DEBUG
+    print(straight)  # DEBUG
     for i in range(1, len(straight)):
         if straight[i] == straight[i - 1] + 1:
             straight_count += 1
+            for j in range(1,len(cards)): # MESSY STUFF HERE IN PROGRESS!!
+                if straight[i-1] not in scored_cards:
+                    if straight[i-1] == cards[j-1][5]:
+                        scored_cards.append(cards[j-1][4])
+                if straight[i] == cards[j][5]:
+                    scored_cards.append(cards[j][4])
             #print(straight_count) # DEBUG
             if straight_count >= 4:
+                for j in range(0, len(cards)):
+                    if straight[i] == cards[j][5]:
+                        scored_cards.append(cards[j][4])
                 straight_check = True
                 straight_count = 0
                 break  # stops loop once straight is found
         else:
             straight_count = 0
 
+    # checks for flushh
     if max(suits.values()) >= 5:
         flush_check = True
 
@@ -267,19 +278,19 @@ def score_calculation(cards): # whole function to calculate the scorings!
     if 3 in ranks.values() and (2 in ranks.values() or list(ranks.values()).count(3) >= 2):
         full_house_check = True
 
-    if max(suits.values()) == 5 and max(ranks.values()) == 5:  # FLUSH FIVE - Five cards of the same rank and suit // ADD CHIP SCORING
+    if flush_check == True and max(ranks.values()) == 5:  # FLUSH FIVE - Five cards of the same rank and suit // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush Five"][0]
         chip_mult += POKER_HANDS["Flush Five"][1]
 
         print("Flush Five")
 
-    elif full_house_check == True and flush_check == True: # FLUSH HOUSE - Full House + Flush // ADD CHIP SCORING
+    elif full_house_check == True and flush_check == True: # FLUSH HOUSE - Full House + Flush // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush House"][0]
         chip_mult += POKER_HANDS["Flush House"][1]
 
         print("Flush House")
 
-    elif max(ranks.values()) == 5: # FIVE OF A KIND // ADD CHIP SCORING
+    elif max(ranks.values()) == 5: # FIVE OF A KIND // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Five of a Kind"][0]
         chip_mult += POKER_HANDS["Five of a Kind"][1]
 
@@ -319,9 +330,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
         chip_score += POKER_HANDS["Straight"][0]
         chip_mult += POKER_HANDS["Straight"][1]
 
-        for i in range(5):
-            chip_score += cards[i][2]
-
         print("Straight!")
 
     elif max(ranks.values()) == 3:  # THREE OF A KIND // ADD CHIP SCORING
@@ -348,10 +356,15 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         print("High Card!")
 
+        scored_cards.append(cards[len(cards)-1][4]) # high card only scores one!
 
+        print("Scored",cards[len(cards)-1][1],cards[len(cards)-1][3],"!")
 
+    print(scored_cards) # DEBUG
+    for i in range(0,len(scored_cards)):
+        chip_score += scored_cards[i]
+    print(chip_score,"*",chip_mult) # DEBUG
     return chip_score, chip_mult # // AT ENDDD! //
-
 # ------------------------------- main module -------------------------------
 print("Welcome to Balatro!")
 print("Generating blind...")
