@@ -61,10 +61,23 @@ POKER_HANDS = {
 } # multipliers for each hand - stored by chip addition, then chip multiplier
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small"],[1.5,"Big"],[2,"Boss"]] # multiplier based on boss
-HAND_SIZE = 30
-SELECT_HAND_SIZE = 6
+HAND_SIZE = 8
+SELECT_HAND_SIZE = 5
+DISCARD_PLAYS = 3
+HAND_PLAYS = 4
 
 # functions
+
+def game_start():
+    print("Welcome to Balatro!")
+    print("Generating blind...")
+    print()
+    time.sleep(1)
+    blind_maker()
+    time.sleep(1)
+    gameplay()
+
+
 def blind_maker(): # makes the current blind
     global anti
     global boss_hp
@@ -111,7 +124,7 @@ def hand_deal(amount): # deals you the hand
     order_state = 1 # state of ordering, can order by value first or suit first (changed later)
     card_deck_print = ["", "", ""]  # reset each time
     # code below is to print the hand like the cards.
-    for j in range(0,amount):
+    for j in range(0,len(hand)):
         hand[j].append(j+1) # used to actually refer to the cards you want to select
         card_lines = card_print(hand[j][1], hand[j][3])  # suit icon + rank icon
         for k in range(3):
@@ -125,18 +138,31 @@ def gameplay(): # main gameplay loop
     # local variables and loops
     global order_state
     global card_deck_print
+    global DISCARD_PLAYS
+    global HAND_PLAYS
     selection_list = []
     chosen_cards = []
     chips = []
     valid_check = 0
+    discards = 0
+    hands = 0
 
     game_loop = True
     choice_loop = True
     card_selection_loop = True
+    play_discard_loop = True
     validity = False
 
+    new_deck()
     while game_loop == True: # main game loop begin
+        hand_deal(HAND_SIZE - len(hand))
+        discards = DISCARD_PLAYS
+        hands = HAND_PLAYS
+        game_loop = False
+        choice_loop = True
         while choice_loop == True: # choice to either resort or select to play/refresh
+            card_selection_loop = True
+            play_discard_loop = True
             print()
             print("Enter 1 to switch sort between 'by number' and 'by suit', Enter 2 to select cards.")
             choice = input()
@@ -157,8 +183,6 @@ def gameplay(): # main gameplay loop
                     # print AFTER building everything
                 for card in card_deck_print:
                     print(card)
-
-
                 time.sleep(1)
             elif choice == "2": # chosen to select
                 choice_loop = False
@@ -184,10 +208,10 @@ def gameplay(): # main gameplay loop
                         print("Please enter a max of",SELECT_HAND_SIZE,"cards, and refer to the order of the card")
                         print("E.g. if you want to pick a card that is 5th from the left, please enter in 5, followed by the other cards you'd like!")
                         selection_list.clear() # clears as even upon error, the append happens sometimes (depending on the error), so clear it to make it easy
-
                     # code to now place these selected cards into another list of chosen cards to play
                     # this code checks the order of the card in the hand, and compares it to the number the player chose and then looks for the right card
                     # after finding the card, it adds it to the list and moves on to look for the next card
+                    #print(hand) # DEBUG
                     if len(selection_list) > SELECT_HAND_SIZE or len(selection_list) < 1: # to make sure they pick 1-howevermanythelimitisonly
                         print("Please pick up to",SELECT_HAND_SIZE,"valid cards!")
                     else:
@@ -198,11 +222,25 @@ def gameplay(): # main gameplay loop
                                     find_chosen_card = hand[j][6]
                                     if find_chosen_card == selection_list[i]:
                                         chosen_cards.append(hand[j])
+                                        #hand.pop(j) // FIX THIS FIX THIS NEED TO REMOVE FROM HAND FOR PLAYABILITYYYY!!
                                         finding_card_loop = False
                         card_selection_loop = False
-                score_calculation(chosen_cards)
+                while play_discard_loop == True:
+                    try:
+                        print("Do you want to play them or discard them? (1 to Play, 2 to Discard)")
+                        choose_choice = input()
+                        if choose_choice == "1":
+                            hands -= 1
+                            score_calculation(chosen_cards)
+                            play_discard_loop = False
+                        if choose_choice == "2":
+                            discards -= 1
+                    except ValueError:
+                        print("Please select either '1' or '2'!")
             else: # error checking
                 print("Please select either '1' or '2'!")
+        if hands > 0:
+            game_loop = True
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
@@ -274,7 +312,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         if suits[i] >= 5: # if the suit is 5+ its a flush
             flush_suit = i # set suit as it
             break
-    print(flush_suit)
+    #print(flush_suit) # DEBUG
     for i in cards: # gets each card
         if i[0] == flush_suit: # if the suit if it is the same
             flush_scored.append(i[4]) # add to flush score! this is seperated to avoid dupe glitches
@@ -300,19 +338,16 @@ def score_calculation(cards): # whole function to calculate the scorings!
     if flush_check == True and max(ranks.values()) == 5:  # FLUSH FIVE - Five cards of the same rank and suit // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush Five"][0]
         chip_mult += POKER_HANDS["Flush Five"][1]
-
         print("Flush Five")
 
     elif full_house_check == True and flush_check == True: # FLUSH HOUSE - Full House + Flush // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush House"][0]
         chip_mult += POKER_HANDS["Flush House"][1]
-
         print("Flush House")
 
     elif max(ranks.values()) == 5: # FIVE OF A KIND // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Five of a Kind"][0]
         chip_mult += POKER_HANDS["Five of a Kind"][1]
-
         print("Five of a Kind")
 
         for i in cards:
@@ -331,6 +366,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
+
     elif straight_check == True and flush_check == True:  # STRAIGHT FLUSH - Straight + Flush
         chip_score += POKER_HANDS["Straight Flush"][0]
         chip_mult += POKER_HANDS["Straight Flush"][1]
@@ -342,10 +378,10 @@ def score_calculation(cards): # whole function to calculate the scorings!
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
+
     elif max(ranks.values()) == 4:  # FOUR OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Four of a Kind"][0]
         chip_mult += POKER_HANDS["Four of a Kind"][1]
-
         print("Four of a Kind!")
 
         for i in cards:
@@ -356,7 +392,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
     elif full_house_check == True: # FULL HOUSE - Three of a kind + Two of a kind // ADD CHIP SCORING
         chip_score += POKER_HANDS["Full House"][0]
         chip_mult += POKER_HANDS["Full House"][1]
-
         print("Full House")
 
         for i in cards:
@@ -376,6 +411,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 if flush_scored[i] == cards[j][4]:
                     print("Scored",cards[j][1],cards[j][3])
 
+
     elif straight_check == True:  # STRAIGHT - All cards are consecutive. Order - A K Q J 10... 3 2 A
         chip_score += POKER_HANDS["Straight"][0]
         chip_mult += POKER_HANDS["Straight"][1]
@@ -387,10 +423,10 @@ def score_calculation(cards): # whole function to calculate the scorings!
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
+
     elif max(ranks.values()) == 3:  # THREE OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Three of a Kind"][0]
         chip_mult += POKER_HANDS["Three of a Kind"][1]
-
         print("Three of a Kind!")
 
         for i in cards:
@@ -401,7 +437,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
     elif list(ranks.values()).count(2) >= 2: # TWO PAIR // ADD CHIP SCORING
         chip_score += POKER_HANDS["Two Pair"][0]
         chip_mult += POKER_HANDS["Two Pair"][1]
-
         print("Two Pair!")
 
         for i in cards:
@@ -413,7 +448,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
     elif max(ranks.values()) == 2:  # PAIR // ADD CHIP SCORING
         chip_score += POKER_HANDS["Pair"][0]
         chip_mult += POKER_HANDS["Pair"][1]
-
         print("Pair!")
 
         for i in cards:
@@ -431,19 +465,10 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
-    print(scored_cards) # DEBUG
+    #print(scored_cards) # DEBUG
     for i in range(0,len(scored_cards)):
         chip_score += scored_cards[i]
-    print(chip_score,"*",chip_mult) # DEBUG
+    #print(chip_score,"*",chip_mult) # DEBUG
     return chip_score, chip_mult # // AT ENDDD! //
 # ------------------------------- main module -------------------------------
-print("Welcome to Balatro!")
-print("Generating blind...")
-print()
-time.sleep(1)
-blind_maker()
-time.sleep(1)
-new_deck()
-hand_deal(HAND_SIZE)
-time.sleep(1)
-gameplay()
+game_start()
