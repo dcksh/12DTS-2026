@@ -19,11 +19,11 @@ import time
 # variables
 card_deck = []
 hand = []
-card_deck_print = ["","",""]
+card_deck_print = ["","","",""]
 
 card_number = 0
 
-anti = 0
+anti = 1
 blind = 0
 boss_hp = 0
 order_state = 1
@@ -51,7 +51,7 @@ POKER_HANDS = {
     "Three of a Kind" : [30,3],
     "Straight" : [30,4],
     "Flush" : [35,4],
-    "Full House" : [40,40],
+    "Full House" : [40,4],
     "Four of a Kind" : [60,7],
     "Straight Flush" : [100,8],
     "Royal Flush" : [100,8],
@@ -73,10 +73,7 @@ def game_start():
     print("Generating blind...")
     print()
     time.sleep(1)
-    blind_maker()
-    time.sleep(1)
     gameplay()
-
 
 def blind_maker(): # makes the current blind
     global anti
@@ -84,16 +81,15 @@ def blind_maker(): # makes the current blind
     global blind
 
     blind += 1 # increases the blind each time, everytime it hits 3 resets to 1 and adds 1 to anti
-    anti += 1 ## ^^^ PLEASE MAKE THIS
+    if blind > 3:
+        blind = 1
+        anti += 1
 
     boss_hp = BLIND_BASE_CHIPS[anti - 1]*BLIND_MULTIPLIERS[blind-1][0] # hp is set on the anti and blind, using the base chips and multipliers above
-    print("Anti",anti)
-    print(BLIND_MULTIPLIERS[blind-1][1],"Blind")
-    print("Score:",boss_hp)
-    print()
+    return boss_hp
 
-def card_print(suit,rank): # card print function, just makes things easy!
-    return(["|"+suit+"¯¯| ","| "+rank+" | ","|__"+suit+"| "])
+def card_print(suit,rank,order): # card print function, just makes things easy!
+    return(["|"+suit+"¯¯| ","| "+rank+" | ","|__"+suit+"| ","  "+str(order)+"   "])
 
 def new_deck(): # makes a new deck
     card_deck.clear() # clear old deck
@@ -114,38 +110,49 @@ def new_deck(): # makes a new deck
 def hand_deal(amount): # deals you the hand
     global card_deck_print # to refer to print the cards.
 
-    print(" -- HAND --")
-    for i in range(0, amount): # range for the amount of times you want a card
-        card = (random.randint(1, len(card_deck))) - 1
-        hand.append(card_deck[card])
-        card_deck.pop(card) # removes card to avoid duplicates
-    hand.sort(key=lambda x: (x[5],[0])) # sorts the stuff automatically by value of card, lowest to highest followed by alphabetical order of suits
-    # lambda is a key you can use for your sort function to do stuff like this ^^
-    order_state = 1 # state of ordering, can order by value first or suit first (changed later)
-    card_deck_print = ["", "", ""]  # reset each time
-    # code below is to print the hand like the cards.
-    for j in range(0,len(hand)):
-        hand[j].append(j+1) # used to actually refer to the cards you want to select
-        card_lines = card_print(hand[j][1], hand[j][3])  # suit icon + rank icon
-        for k in range(3):
-            card_deck_print[k] += card_lines[k] + " " # basically now, each line of the card is stored in the list to print later.
-        # print AFTER building everything
+    amount = min(amount, len(card_deck)) # makes it so if you want to deal 5 but only have 4, itll deal 4!
+    if len(card_deck) == 0: # for if it is 0...
+        print("Deck is empty! No more cards to deal.")
+    else:
+        for i in hand:
+            if len(i) > 6: # removes the order so it redefines it for each hand
+                i.pop(6)
+        print(" -- HAND --")
+        for i in range(0, amount): # range for the amount of times you want a card
+            card = (random.randint(1, len(card_deck))) - 1
+            hand.append(card_deck[card])
+            card_deck.pop(card) # removes card to avoid duplicates
+        hand.sort(key=lambda x: (x[5],[0])) # sorts the stuff automatically by value of card, lowest to highest followed by alphabetical order of suits
+        # lambda is a key you can use for your sort function to do stuff like this ^^
+        order_state = 1 # state of ordering, can order by value first or suit first (changed later)
+        card_deck_print = ["", "", "", ""]  # reset each time
+        # code below is to print the hand like the cards.
+        for j in range(0,len(hand)):
+            hand[j].append(j+1) # used to actually refer to the cards you want to select
+            card_lines = card_print(hand[j][1], hand[j][3],hand[j][6])  # suit icon + rank icon
+            for k in range(len(card_deck_print)):
+                card_deck_print[k] += card_lines[k] + " " # basically now, each line of the card is stored in the list to print later.
+            # print AFTER building everything
     for l in card_deck_print: # now, this just prints each element of the card deck to make it horizontal as it is.
         print(l)
+    print(f"Cards left in deck: {len(card_deck)}") # DEBUG
 
 
 def gameplay(): # main gameplay loop
     # local variables and loops
     global order_state
+    global boss_hp
     global card_deck_print
     global DISCARD_PLAYS
     global HAND_PLAYS
     selection_list = []
     chosen_cards = []
+    card_removal = []
     chips = []
     valid_check = 0
-    discards = 0
-    hands = 0
+    discards = DISCARD_PLAYS
+    hands = HAND_PLAYS
+    damage = 0
 
     game_loop = True
     choice_loop = True
@@ -154,10 +161,18 @@ def gameplay(): # main gameplay loop
     validity = False
 
     new_deck()
+    blind_maker()
     while game_loop == True: # main game loop begin
+        # just stuff to define each loop back
+        print()
+        print("Anti", anti)
+        print(BLIND_MULTIPLIERS[blind - 1][1], "Blind")
+        print("Score:", boss_hp)
+        print()
+        order_state = 1
         hand_deal(HAND_SIZE - len(hand))
-        discards = DISCARD_PLAYS
-        hands = HAND_PLAYS
+        print("Hands:",hands,"—","Discards:",discards)
+
         game_loop = False
         choice_loop = True
         while choice_loop == True: # choice to either resort or select to play/refresh
@@ -173,26 +188,30 @@ def gameplay(): # main gameplay loop
                 elif order_state == 2: # opposite of above
                     hand.sort(key=lambda x: (x[5], [0]))
                     order_state = 1
-                card_deck_print = ["", "", ""]  # reset each time
+                card_deck_print = ["", "", "", ""]  # reset each time
                 for j in range(0, len(hand)):  # prints current hand, code explained above
                     hand[j].pop(6) # pop to change the order of the card so that when sorting changes, they can still play it according to order.
                     hand[j].append(j + 1)
-                    card_lines = card_print(hand[j][1], hand[j][3])  # suit icon + rank icon
-                    for k in range(3):
+                    card_lines = card_print(hand[j][1], hand[j][3],hand[j][6])  # suit icon + rank icon
+                    for k in range(len(card_deck_print)):
                         card_deck_print[k] += card_lines[k] + " "
                     # print AFTER building everything
                 for card in card_deck_print:
                     print(card)
                 time.sleep(1)
             elif choice == "2": # chosen to select
+                selection_list.clear() # clears the lists each time to avoid duplicates in any of them
+                chosen_cards.clear()
+                card_removal.clear()
                 choice_loop = False
-                while card_selection_loop == True:
+                while card_selection_loop == True: # error fix loops
                     valid_check = 0
                     try:
-                        print("Please enter the order number of the card you'd like to select, from left to right. (E.g. 1 for the 1st card, 7 for the 7th)")
+                        print("Please enter the order number of the card you'd like to select, with spaces between each card number! e.g. '1 7 8'")
                         choose_cards = input()
-                        for i in choose_cards.split(" ",SELECT_HAND_SIZE-1):
-                            if int(i) < 1 or int(i) > len(hand):
+                        # code below checks each individual card inputted to see if it is a valid card then adds to it
+                        for i in choose_cards.split(" ",SELECT_HAND_SIZE-1): # refer to the bigg chunk of code below this!
+                            if int(i) < 1 or int(i) > len(hand): # if invalid hand it doesnt pass valid check...
                                 pass
                             else:
                                 valid_check += 1
@@ -201,7 +220,7 @@ def gameplay(): # main gameplay loop
                                 # strip then gets rid of extra stuff (white spaces by default) to leave it as the number alone, allowing the code to convert it into an integer
                                 # then, just adds it to the list fo selected cards
                             for i in choose_cards.split(" ", SELECT_HAND_SIZE - 1):
-                                selection_list.append(int(i.strip()))
+                                selection_list.append(int(i.strip())) # adds in the plain numbers to a list
                         else:
                                 print("Please select a valid number, from 1 to " + str(len(hand)))
                     except ValueError: # error fixing
@@ -221,26 +240,44 @@ def gameplay(): # main gameplay loop
                                 for j in range(0,len(hand)):
                                     find_chosen_card = hand[j][6]
                                     if find_chosen_card == selection_list[i]:
-                                        chosen_cards.append(hand[j])
-                                        #hand.pop(j) // FIX THIS FIX THIS NEED TO REMOVE FROM HAND FOR PLAYABILITYYYY!!
+                                        chosen_cards.append(hand[j]) # used later for the scoring
+                                        card_removal.append(hand[j])
                                         finding_card_loop = False
                         card_selection_loop = False
-                while play_discard_loop == True:
+                        # this code removes selected cards from hand
+                        for i in card_removal:
+                            hand.remove(i)
+                while play_discard_loop == True: # error fixing
                     try:
                         print("Do you want to play them or discard them? (1 to Play, 2 to Discard)")
                         choose_choice = input()
-                        if choose_choice == "1":
-                            hands -= 1
-                            score_calculation(chosen_cards)
-                            play_discard_loop = False
+                        if choose_choice == "1": # scoring
+                            if hands > 0:
+                                # just sees the score amt and then reduces the score required to beat and hands
+                                hands = hands - 1
+                                damage = score_calculation(chosen_cards)
+                                boss_hp = boss_hp - damage
+                                play_discard_loop = False
+                            else:
+                                print("No hands remaining!")
                         if choose_choice == "2":
-                            discards -= 1
-                    except ValueError:
+                            # does nothing cuz like it already removes it above
+                            if discards > 0: # although it removes already, we need to see if they have discards cuz if not they have to play the hand
+                                discards -= 1
+                                play_discard_loop = False
+                            else:
+                                print("No discards remaining!")
+                    except ValueError: # error fixing above and below
                         print("Please select either '1' or '2'!")
             else: # error checking
                 print("Please select either '1' or '2'!")
-        if hands > 0:
+        if hands > 0 and boss_hp > 0:
             game_loop = True
+        else:
+            print()
+            print("Defeated blind!")
+
+
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
@@ -260,7 +297,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
     flush_check = False
 
     cards.sort(key=lambda x: (x[5]))
-    #print(cards) # DEBUG
+    print(cards) # DEBUG
 
     for i in range(len(cards)): # sorts the deck's ranks out
         if cards[i][5] in ranks:
@@ -298,7 +335,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
             straight_count = [straight[i]] # if it doesnt hit straight, start new run with this
     if 1 in straight_count:
         straight_count.pop(0)
-        straight_count.insert(0,14)
+        straight_count.insert(0,14) # this is just for the score since a '1' doesnt exist in balatro, it is an ace which holds order value of 14
     for i in range(0, len(straight_count)):
         for j in range(0, len(cards)): # this is for scoring, checks what card it is then pulls out the score value for it and adds it to scored cards!
             if cards[j][5] == straight_count[i]:
@@ -335,6 +372,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
     #print(house_pair_ranks) # DEBUG
 
     # HAND CALCULATIONS
+    # this just usually adds its score, mult, and prints!
     if flush_check == True and max(ranks.values()) == 5:  # FLUSH FIVE - Five cards of the same rank and suit // NOT CURRENTLY POSSIBLE WITH BASE CARDS
         chip_score += POKER_HANDS["Flush Five"][0]
         chip_mult += POKER_HANDS["Flush Five"][1]
@@ -366,7 +404,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
-
     elif straight_check == True and flush_check == True:  # STRAIGHT FLUSH - Straight + Flush
         chip_score += POKER_HANDS["Straight Flush"][0]
         chip_mult += POKER_HANDS["Straight Flush"][1]
@@ -377,7 +414,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 if straight_scored[i] == cards[j][5]:
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
-
 
     elif max(ranks.values()) == 4:  # FOUR OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Four of a Kind"][0]
@@ -411,7 +447,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 if flush_scored[i] == cards[j][4]:
                     print("Scored",cards[j][1],cards[j][3])
 
-
     elif straight_check == True:  # STRAIGHT - All cards are consecutive. Order - A K Q J 10... 3 2 A
         chip_score += POKER_HANDS["Straight"][0]
         chip_mult += POKER_HANDS["Straight"][1]
@@ -422,7 +457,6 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 if straight_scored[i] == cards[j][5]:
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
-
 
     elif max(ranks.values()) == 3:  # THREE OF A KIND // ADD CHIP SCORING
         chip_score += POKER_HANDS["Three of a Kind"][0]
@@ -466,9 +500,11 @@ def score_calculation(cards): # whole function to calculate the scorings!
                 print("Scored", i[1], i[3])
 
     #print(scored_cards) # DEBUG
+    # prints the cards scored and final score
     for i in range(0,len(scored_cards)):
         chip_score += scored_cards[i]
-    #print(chip_score,"*",chip_mult) # DEBUG
-    return chip_score, chip_mult # // AT ENDDD! //
+    print(chip_score,"*",chip_mult)
+    print("Scored",chip_score*chip_mult)
+    return int(chip_score*chip_mult) # // AT ENDDD! //
 # ------------------------------- main module -------------------------------
 game_start()
