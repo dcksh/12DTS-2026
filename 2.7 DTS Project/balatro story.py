@@ -4,7 +4,7 @@
 # daksh shah
 # 10/3/26
 
-# last updated - 10/3/26
+# last updated - 29/3/26
 
 # // !! PROGRAMMER'S NOTES !! //
 # - For the best experience, please use MS Gothic or Snap ITC as your font. This is just for the card printing, as these fonts keep it even. (MS Gothic is my reccomendation)
@@ -19,7 +19,9 @@ import time
 # variables
 card_deck = []
 hand = []
+joker_deck = []
 card_deck_print = ["","","",""]
+money = 0
 
 card_number = 0
 
@@ -42,7 +44,6 @@ SUIT_ICON = ["♥","♦","♧","♤"]
 ## 🃑 🃒 🃓 🃔 🃕 🃖 🃗 🃘 🃙 🃚 🃛 🃜 🃝 🃞
 CARDS = ["Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Jack","Queen","King","Ace"]
 CARD_ICONS = ["2","3","4","5","6","7","8","9","X","J","Q","K","A"]
-
 FACE_INITIALS = ["J, Q, K, A"]
 POKER_HANDS = {
     "High Card" : [5,1],
@@ -59,13 +60,69 @@ POKER_HANDS = {
     "Flush House" : [140,14],
     "Flush Five" : [160,16]
 } # multipliers for each hand - stored by chip addition, then chip multiplier
+JOKERS = {
+    "Common" : [
+        ["Joker","+4 Mult"],
+        ["Gluttonous","Played cards with Club suit give +3 Mult when scored"],
+        ["Greedy","Played cards with Diamond suit give +3 Mult when scored"],
+        ["Lusty","Played cards with Heart suit give +3 Mult when scored"],
+        ["Wrathful","Played cards with Spade suit give +3 Mult when scored"],
+        ["Scary Face","Played face cards give +30 Chips when scored"],
+        ["Jolly Joker","+8 Mult if played hand contains a Pair"],
+        ["Zany Joker", "+12 Mult if played hand contains a Three of a Kind"],
+        ["Mad Joker", "+10 Mult if played hand contains a Two Pair"],
+        ["Crazy Joker", "+12 Mult if played hand contains a Straight"],
+        ["Drool Joker", "+10 Mult if played hand contains a Flush"],
+        ["Sly Joker","+50 Chips if played hand contains a Pair"],
+        ["Wily Joker", "+100 Chips if played hand contains a Three of a Kind"],
+        ["Clever Joker", "+80 Chips if played hand contains a Two Pair"],
+        ["Devious Joker", "+100 Chips if played hand contains a Straight"],
+        ["Crafty Joker", "+80 Chips if played hand contains a Flush"],
+        ["Half Joker","+20 Mult if played hand contains 3 or fewer cards"]
+        ["Misprint","+ 0-23 Mult"],
+        ["Even Steven","Played cards with even rank give +4 Mult when scored"],
+        ["Odd Todd","Played cards with odd rank give +31 Chips when scored"],
+        ["Scholar","Played Aces give +20 Chips and +4 Mult when scored"],
+        ["Ice Cream","+100 Chips, -5 Chips for every hand played"],
+        ["Blue Joker","+2 Chips for each remaining card in deck"],
+        ["Juggler","+1 Hand Size"],
+        ["Drunkard","+1 Discard"],
+    ],
+    "Uncommon" : [
+        ["Four Fingers","All Flushes and Straights can be made with 4 card"],
+        ["Fibonacci","Each played Ace, 2, 3, 5, or 8 gives +8 Mult when scored"],
+        ["Dusk","Retrigger all played cards in final hand of the round"],
+        ["Hack","Retrigger each played 2, 3, 4, or 5"],
+        ["Burglar","When Blind is selected, gain +3 Hands and lose all discards"],
+        ["Blackboard","X3 Mult if all cards held in hand are Spade suit icon Spades or Club suit icon Clubs"],
+        ["Photograph","First played face card gives X2 Mult when scored"],
+        ["Sock and Buskin","Retrigger all played face cards"],
+        ["Bloodstone","1 in 2 chance for played cards with Heart suit icon Heart suit to give X1.5 Mult when scored"],
+        ["Arrowhead","Played cards with Spade suit icon Spade suit give +50 Chips when scored"],
+        ["Onyx Gate","Played cards with Club suit icon Club suit give +7 Mult when scored"]
+    ],
+    "Rare" : [
+        ["Baseball Card","Uncommon Jokers each give X1.5 Mult"],
+        ["Wee Joker","This Joker gains +8 Chips when each played 2 is scored"],
+        ["Stuntman","+250 Chips, -2 hand size"],
+        ["The Duo","X2 Mult if played hand contains a Pair"],
+        ["The Trio", "X3 Mult if played hand contains a Three of a Kind"],
+        ["The Family", "X4 Mult if played hand contains a Four of a Kind"],
+        ["The Order", "X3 Mult if played hand contains a Straight"],
+        ["The Tribe", "X2 Mult if played hand contains a Flush"],
+    ]
+}
+JOKER_RARITIES = {
+    "Common" : 60,
+    "Uncommong" : 30,
+    "Rare" : 10,
+}
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
-BLIND_MULTIPLIERS = [[1,"Small"],[1.5,"Big"],[2,"Boss"]] # multiplier based on boss
+BLIND_MULTIPLIERS = [[1,"Small",3],[1.5,"Big",4],[2,"Boss",5]] # multiplier based on boss
 HAND_SIZE = 8
 SELECT_HAND_SIZE = 5
 DISCARD_PLAYS = 3
 HAND_PLAYS = 4
-
 # functions
 
 def game_start():
@@ -142,6 +199,8 @@ def gameplay(): # main gameplay loop
     # local variables and loops
     global order_state
     global boss_hp
+    global money
+
     global card_deck_print
     global DISCARD_PLAYS
     global HAND_PLAYS
@@ -198,7 +257,8 @@ def gameplay(): # main gameplay loop
                     # print AFTER building everything
                 for card in card_deck_print:
                     print(card)
-                time.sleep(1)
+                time.sleep(0.5)
+
             elif choice == "2": # chosen to select
                 selection_list.clear() # clears the lists each time to avoid duplicates in any of them
                 chosen_cards.clear()
@@ -271,12 +331,21 @@ def gameplay(): # main gameplay loop
                         print("Please select either '1' or '2'!")
             else: # error checking
                 print("Please select either '1' or '2'!")
-        if hands > 0 and boss_hp > 0:
-            game_loop = True
-        else:
+        if hands <= 0:
+            print("Hands ran out! You lost.")
+            quit()
+        elif boss_hp <= 0:
             print()
             print("Defeated blind!")
+            money = int(round(BLIND_MULTIPLIERS[blind-1][2] + hands + ((5/100) * money)))
+            shop()
+        else:
+            game_loop = True
 
+def shop():
+    global money
+
+    print("Welcome to the shop!")
 
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
@@ -297,7 +366,9 @@ def score_calculation(cards): # whole function to calculate the scorings!
     flush_check = False
 
     cards.sort(key=lambda x: (x[5]))
-    print(cards) # DEBUG
+    #print(cards) # DEBUG
+    print()
+
 
     for i in range(len(cards)): # sorts the deck's ranks out
         if cards[i][5] in ranks:
@@ -390,6 +461,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         for i in cards:
             if i[5] == of_a_kind_ranks:
+                time.sleep(0.3)
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
@@ -401,6 +473,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for i in range(0,len(straight_scored)):
             for j in range(0,len(cards)):
                 if straight_scored[i] == cards[j][5]:
+                    time.sleep(0.3)
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
@@ -412,6 +485,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for i in range(0,len(straight_scored)):
             for j in range(0,len(cards)):
                 if straight_scored[i] == cards[j][5]:
+                    time.sleep(0.3)
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
@@ -422,6 +496,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         for i in cards:
             if i[5] == of_a_kind_ranks:
+                time.sleep(0.3)
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
@@ -433,6 +508,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for i in cards:
             for j in house_pair_ranks:
                 if i[5] == j:
+                    time.sleep(0.3)
                     scored_cards.append(i[4])
                     print("Scored", i[1], i[3])
 
@@ -445,6 +521,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
             scored_cards.append(flush_scored[i])
             for j in range(0,len(cards)):
                 if flush_scored[i] == cards[j][4]:
+                    time.sleep(0.3)
                     print("Scored",cards[j][1],cards[j][3])
 
     elif straight_check == True:  # STRAIGHT - All cards are consecutive. Order - A K Q J 10... 3 2 A
@@ -455,6 +532,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for i in range(0,len(straight_scored)):
             for j in range(0,len(cards)):
                 if straight_scored[i] == cards[j][5]:
+                    time.sleep(0.3)
                     scored_cards.append(cards[j][4])
                     print("Scored",cards[j][1],cards[j][3])
 
@@ -465,6 +543,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         for i in cards:
             if i[5] == of_a_kind_ranks:
+                time.sleep(0.3)
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
@@ -476,6 +555,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for i in cards:
             for j in house_pair_ranks:
                 if i[5] == j:
+                    time.sleep(0.3)
                     scored_cards.append(i[4])
                     print("Scored", i[1], i[3])
 
@@ -486,6 +566,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         for i in cards:
             if i[5] == of_a_kind_ranks:
+                time.sleep(0.3)
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
@@ -496,6 +577,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
         for i in cards:
             if i[5] == of_a_kind_ranks:
+                time.sleep(0.3)
                 scored_cards.append(i[4])
                 print("Scored", i[1], i[3])
 
@@ -503,8 +585,11 @@ def score_calculation(cards): # whole function to calculate the scorings!
     # prints the cards scored and final score
     for i in range(0,len(scored_cards)):
         chip_score += scored_cards[i]
-    print(chip_score,"*",chip_mult)
+    #print(chip_score,"*",chip_mult)
+    print()
+    time.sleep(0.3)
     print("Scored",chip_score*chip_mult)
+    time.sleep(0.3)
     return int(chip_score*chip_mult) # // AT ENDDD! //
 # ------------------------------- main module -------------------------------
 game_start()
