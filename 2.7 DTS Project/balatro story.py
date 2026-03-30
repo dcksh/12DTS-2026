@@ -78,7 +78,7 @@ JOKERS = {
         ["Clever Joker", "+80 Chips if played hand contains a Two Pair"],
         ["Devious Joker", "+100 Chips if played hand contains a Straight"],
         ["Crafty Joker", "+80 Chips if played hand contains a Flush"],
-        ["Half Joker","+20 Mult if played hand contains 3 or fewer cards"]
+        ["Half Joker","+20 Mult if played hand contains 3 or fewer cards"],
         ["Misprint","+ 0-23 Mult"],
         ["Even Steven","Played cards with even rank give +4 Mult when scored"],
         ["Odd Todd","Played cards with odd rank give +31 Chips when scored"],
@@ -117,6 +117,7 @@ JOKER_RARITIES = {
     "Uncommong" : 30,
     "Rare" : 10,
 }
+JOKER_DRAW = 4
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small",3],[1.5,"Big",4],[2,"Boss",5]] # multiplier based on boss
 HAND_SIZE = 8
@@ -130,7 +131,7 @@ def game_start():
     print("Generating blind...")
     print()
     time.sleep(1)
-    gameplay()
+    shop()
 
 def blind_maker(): # makes the current blind
     global anti
@@ -344,9 +345,42 @@ def gameplay(): # main gameplay loop
 
 def shop():
     global money
+    global joker_deck
+    global JOKER_DRAW
+    selection_list = []
+    joker_rarity = 0
+    joker_generated = 0
+    selection = 0
+
+    selection_loop = True
 
     print("Welcome to the shop!")
+    for i in range(JOKER_DRAW):
+        joker_rarity = random.randint(1,100)
+        if joker_rarity <= 60:
+            joker_generated = random.randint(0,len(JOKERS["Common"])-1)
+            selection_list.append(JOKERS["Common"][joker_generated])
+        elif joker_rarity <= 90:
+            joker_generated = random.randint(0,len(JOKERS["Uncommon"])-1)
+            selection_list.append(JOKERS["Uncommon"][joker_generated])
+        elif joker_rarity <= 100:
+            joker_generated = random.randint(0,len(JOKERS["Rare"])-1)
+            selection_list.append(JOKERS["Rare"][joker_generated])
 
+    while selection_loop == True:
+        print()
+        for i in range(0,len(selection_list)):
+            selection_list[i].append(i+1)
+            print(selection_list[i][2],selection_list[i][0])
+        print("Please select a joker.")
+        selection = int(input())
+
+        for i in selection_list:
+            if selection == i[2]:
+                print(i[0])
+                print(i[1])
+
+                print("Input '1' to add this joker to your deck, and '2' to go back.")
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
