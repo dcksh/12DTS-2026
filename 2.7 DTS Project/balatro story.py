@@ -60,8 +60,8 @@ POKER_HANDS = {
     "Flush House" : [140,14],
     "Flush Five" : [160,16]
 } # multipliers for each hand - stored by chip addition, then chip multiplier
-JOKERS = {
-    "Common" : [
+JOKERS = [
+    ["Common",[
         ["Joker","+4 Mult"],
         ["Gluttonous","Played cards with Club suit give +3 Mult when scored"],
         ["Greedy","Played cards with Diamond suit give +3 Mult when scored"],
@@ -86,9 +86,10 @@ JOKERS = {
         ["Ice Cream","+100 Chips, -5 Chips for every hand played"],
         ["Blue Joker","+2 Chips for each remaining card in deck"],
         ["Juggler","+1 Hand Size"],
-        ["Drunkard","+1 Discard"],
+        ["Drunkard","+1 Discard"]
+             ]
     ],
-    "Uncommon" : [
+    ["Uncommon",[
         ["Four Fingers","All Flushes and Straights can be made with 4 card"],
         ["Fibonacci","Each played Ace, 2, 3, 5, or 8 gives +8 Mult when scored"],
         ["Dusk","Retrigger all played cards in final hand of the round"],
@@ -100,8 +101,9 @@ JOKERS = {
         ["Bloodstone","1 in 2 chance for played cards with Heart suit icon Heart suit to give X1.5 Mult when scored"],
         ["Arrowhead","Played cards with Spade suit icon Spade suit give +50 Chips when scored"],
         ["Onyx Gate","Played cards with Club suit icon Club suit give +7 Mult when scored"]
+                ]
     ],
-    "Rare" : [
+    ["Rare",[
         ["Baseball Card","Uncommon Jokers each give X1.5 Mult"],
         ["Wee Joker","This Joker gains +8 Chips when each played 2 is scored"],
         ["Stuntman","+250 Chips, -2 hand size"],
@@ -110,8 +112,9 @@ JOKERS = {
         ["The Family", "X4 Mult if played hand contains a Four of a Kind"],
         ["The Order", "X3 Mult if played hand contains a Straight"],
         ["The Tribe", "X2 Mult if played hand contains a Flush"],
+            ]
     ]
-}
+]
 JOKER_RARITIES = {
     "Common" : 60,
     "Uncommong" : 30,
@@ -131,7 +134,7 @@ def game_start():
     print("Generating blind...")
     print()
     time.sleep(1)
-    shop()
+    gameplay()
 
 def blind_maker(): # makes the current blind
     global anti
@@ -150,6 +153,8 @@ def card_print(suit,rank,order): # card print function, just makes things easy!
     return(["|"+suit+"¯¯| ","| "+rank+" | ","|__"+suit+"| ","  "+str(order)+"   "])
 
 def new_deck(): # makes a new deck
+    global card_deck
+
     card_deck.clear() # clear old deck
     for i in range(1, 10): # prints out the number cards, uses for loops to make 44 of these
         for j in range(4):
@@ -193,7 +198,7 @@ def hand_deal(amount): # deals you the hand
             # print AFTER building everything
     for l in card_deck_print: # now, this just prints each element of the card deck to make it horizontal as it is.
         print(l)
-    print(f"Cards left in deck: {len(card_deck)}") # DEBUG
+    print("Cards left in deck:",len(card_deck)) # DEBUG
 
 
 def gameplay(): # main gameplay loop
@@ -222,6 +227,7 @@ def gameplay(): # main gameplay loop
 
     new_deck()
     blind_maker()
+    hand.clear()
     while game_loop == True: # main game loop begin
         # just stuff to define each loop back
         print()
@@ -348,39 +354,83 @@ def shop():
     global joker_deck
     global JOKER_DRAW
     selection_list = []
+    deletion = ""
     joker_rarity = 0
     joker_generated = 0
     selection = 0
 
     selection_loop = True
+    error_message = False
+    input_loop = True
 
     print("Welcome to the shop!")
-    for i in range(JOKER_DRAW):
+    for i in range(JOKER_DRAW): # draws 4 random jokers from the pile that is avaliable.
         joker_rarity = random.randint(1,100)
         if joker_rarity <= 60:
-            joker_generated = random.randint(0,len(JOKERS["Common"])-1)
-            selection_list.append(JOKERS["Common"][joker_generated])
+            joker_generated = random.randint(0,len(JOKERS[0][1])-1)
+            selection_list.append(JOKERS[0][1][joker_generated])
         elif joker_rarity <= 90:
-            joker_generated = random.randint(0,len(JOKERS["Uncommon"])-1)
-            selection_list.append(JOKERS["Uncommon"][joker_generated])
+            joker_generated = random.randint(0,len(JOKERS[1][1])-1)
+            selection_list.append(JOKERS[1][1][joker_generated])
         elif joker_rarity <= 100:
-            joker_generated = random.randint(0,len(JOKERS["Rare"])-1)
-            selection_list.append(JOKERS["Rare"][joker_generated])
+            joker_generated = random.randint(0,len(JOKERS[2][1])-1)
+            selection_list.append(JOKERS[2][1][joker_generated])
 
-    while selection_loop == True:
-        print()
-        for i in range(0,len(selection_list)):
-            selection_list[i].append(i+1)
-            print(selection_list[i][2],selection_list[i][0])
-        print("Please select a joker.")
-        selection = int(input())
+    for i in range(0, len(selection_list)): # just to add a number so the user can refer to each joker when picking
+        selection_list[i].append(i + 1)
 
-        for i in selection_list:
-            if selection == i[2]:
-                print(i[0])
-                print(i[1])
+    while selection_loop == True: # error fix
+        try:
+            input_loop = True
+            print()
+            for i in range(0,len(selection_list)): # printing of jokers
+                print(selection_list[i][2],selection_list[i][0])
+            print()
+            print("Please select a joker.")
+            selection = int(input())
+        except ValueError: # error fix
+            input_loop = False
+            print("Please select a number 1 to", str(JOKER_DRAW) + "!")
+        if selection >= 1 or selection <= JOKER_DRAW: # error fix
+            while input_loop == True: # error fix
+                try: # error fix
+                    for i in selection_list:
+                        if selection == i[2]: # checks and finds the joker they selected
+                            print(i[0])
+                            print(i[1])
+                            print("Input '1' to add this joker to your deck, and '2' to go back.")
+                            choice = int(input())
+                            if choice == 1: # if they want to add this joker
+                                for j in selection_list: # just another check to find the selected joker and add it to the deck. deletion is for later as dupe jokers don't exist
+                                    if selection == j[2]:
+                                        joker_deck.append(j[0])
+                                        deletion = j[0]
+                                input_loop = False
+                                selection_loop = False
+                            elif choice == 2: # if they want to go back and look
+                                selection_loop = True
+                                input_loop = False
+                            else:
+                                print("Please select either '1' or '2'!")
+                except ValueError:
+                    print("Please select either '1' or '2'!")
+        else:
+            print("Please select a number 1 to", str(JOKER_DRAW) + "!")
 
-                print("Input '1' to add this joker to your deck, and '2' to go back.")
+    #print(joker_deck) # DEBUG
+    #print(deletion) # DEBUG
+    #print(JOKERS) # DEBUG
+
+    for deletion_rarity in range(0,3): # deleting the joker they picked
+        for i in range(0,len(JOKERS[deletion_rarity][1])):
+            if JOKERS[deletion_rarity][1][i][0] == deletion:
+                JOKERS[deletion_rarity][1].pop(i)
+                #print("Deleted",deletion) # DEBUG
+                #print(JOKERS[deletion_rarity][1]) # DEBUG
+                break
+
+    gameplay() # // END!! //
+
 def score_calculation(cards): # whole function to calculate the scorings!
     chip_score = 0
     chip_mult = 0
