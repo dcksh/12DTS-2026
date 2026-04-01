@@ -21,7 +21,6 @@ card_deck = []
 hand = []
 joker_deck = []
 card_deck_print = ["","","",""]
-money = 0
 
 card_number = 0
 
@@ -83,8 +82,6 @@ JOKERS = [
         ["Even Steven","Played cards with even rank give +4 Mult when scored"],
         ["Odd Todd","Played cards with odd rank give +31 Chips when scored"],
         ["Scholar","Played Aces give +20 Chips and +4 Mult when scored"],
-        ["Ice Cream","+100 Chips, -5 Chips for every hand played"],
-        ["Blue Joker","+2 Chips for each remaining card in deck"],
         ["Juggler","+1 Hand Size"],
         ["Drunkard","+1 Discard"]
              ]
@@ -95,8 +92,6 @@ JOKERS = [
         ["Dusk","Retrigger all played cards in final hand of the round"],
         ["Hack","Retrigger each played 2, 3, 4, or 5"],
         ["Burglar","When Blind is selected, gain +3 Hands and lose all discards"],
-        ["Blackboard","X3 Mult if all cards held in hand are Spade suit icon Spades or Club suit icon Clubs"],
-        ["Photograph","First played face card gives X2 Mult when scored"],
         ["Sock and Buskin","Retrigger all played face cards"],
         ["Bloodstone","1 in 2 chance for played cards with Heart suit icon Heart suit to give X1.5 Mult when scored"],
         ["Arrowhead","Played cards with Spade suit icon Spade suit give +50 Chips when scored"],
@@ -104,9 +99,7 @@ JOKERS = [
                 ]
     ],
     ["Rare",[
-        ["Baseball Card","Uncommon Jokers each give X1.5 Mult"],
         ["Wee Joker","This Joker gains +8 Chips when each played 2 is scored"],
-        ["Stuntman","+250 Chips, -2 hand size"],
         ["The Duo","X2 Mult if played hand contains a Pair"],
         ["The Trio", "X3 Mult if played hand contains a Three of a Kind"],
         ["The Family", "X4 Mult if played hand contains a Four of a Kind"],
@@ -123,16 +116,96 @@ JOKER_RARITIES = {
 JOKER_DRAW = 4
 BLIND_BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] # scores for each anti, base chips increase per anti
 BLIND_MULTIPLIERS = [[1,"Small",3],[1.5,"Big",4],[2,"Boss",5]] # multiplier based on boss
+BLIND_DIALOGUE = [
+    [   # small blinds
+        """“another one thrown down here…”\n“you still smell like the stage.”""",
+        """“wait… i know you.”\n“you were funny once.”""",
+        """“don’t look so lost.”\n“they all come down here eventually.”""",
+        """“fresh meat… let’s see how long your pride lasts.”""",
+        """“you stumble like the last one… pathetic.”"""
+    ],
+    [   # medium blinds
+        """“still trying?”\n“they already replaced you.”""",
+        """“what was it you did again?”\n“…i forgot.”""",
+        """“smile.”\n“c’mon—do the face.”""",
+        """“do you even remember applause?”""",
+        """“your tricks are old… boring now.”"""
+    ],
+    [   # boss blinds
+        """“perform.”\n“that’s what you do, isn’t it?”""",
+        """“that grin doesn’t belong to you.”\n“it belongs to them.”""",
+        """“you don’t get to stop performing.”\n“not ever.”""",
+        """“show us… or fall.”""",
+        """“we’ve been waiting for a real show… don’t disappoint.”"""
+    ],
+    [   # defeat lines
+        """“…then who are you without it?”""",
+        """“…boring.”\n“next.”""",
+        """“…huh, that’s all?”""",
+        """“…we were hoping for more.”""",
+        """“…pathetic.”\n“try again… if you can.”"""
+    ],
+    [
+    """“ugh… so easily… thrown down…”""",
+    """“no… not like this… the stage… my pride…”""",
+    """“h-hah… you… you weren’t supposed to…”""",
+    """“this… this isn’t fair… i was supposed to last longer…”""",
+    """“cursed… jester… why… why me?!”"""
+    ]
+]
+KING_DIALOGUE = [
+    [   # intro lines
+        """“ah… so the jester crawled back.”\n“you were amusing… for a time.”""",
+        """“did you think I’d forget you?”\n“fools always crawl back.”""",
+        """“look at you… still hoping for applause?”""",
+        """“crawling through shadows… pathetic.”""",
+        """“your pride smells as stale as your tricks.”"""
+    ],
+]
+JOKER_SHOP_DIALOGUE = [
+    """“over here… don’t ask why. just take what you need.”""",
+    """“we were once like you… broken, discarded… but we survive.”""",
+    """“pick carefully… some tools are sharper than you think.”""",
+    """“don’t bother talking… just follow our lead.”""",
+    """“you’re quiet… i like that. maybe you’ll last longer.”""",
+    """“we tried to make them laugh once… now we make sure others live.”""",
+    """“fight, learn, survive… nothing else matters down here.”""",
+    """“we keep what was lost… maybe it will help you.”""",
+    """“don’t look for mercy… look for advantage.”""",
+    """“take what’s useful… leave the rest to rot.”"""
+]
 HAND_SIZE = 8
 SELECT_HAND_SIZE = 5
 DISCARD_PLAYS = 3
 HAND_PLAYS = 4
 # functions
 
-def game_start():
-    print("Welcome to Balatro!")
-    print("Generating blind...")
+def slow_print(text): # useful for text to slowly generate, letting the player read it well.
+    for i in range(len(text)):
+        print(text[i], end = '')
+        time.sleep(0.01) # using variable for different slow for different use
     print()
+
+def game_start():
+    slow_print("""Astus was once the crown jewel of the royal court—rome’s finest jester, unmatched in wit, timing, and spectacle. nobles gathered not for politics, but for him. Laughter followed wherever he stepped.
+
+But laughter fades.
+
+As years passed, the court’s taste shifted. newer acts, louder performers, sharper tricks. Astus adapted, pushed harder, gave more of himself — until there was nothing left to give.
+
+One night, mid-performance, the king did not laugh.
+
+That silence spread.
+
+Astus finished his act to a hollow room. No applause. No dismissal. Just a gesture.
+
+He was removed.
+
+Not executed — worse. Forgotten.
+
+He was cast into the lower vaults beneath the palace, a shifting dungeon of failed entertainers, broken personas, and discarded identities — manifested as “blinds.”
+
+Now, the spirit of Astus awakens once again, accompanied by solely his card tricks to make it through this broken land, and to get his vengance once and for all.""")
     time.sleep(1)
     gameplay()
 
@@ -140,14 +213,35 @@ def blind_maker(): # makes the current blind
     global anti
     global boss_hp
     global blind
+    global KING_DIALOGUE
+    global BLIND_DIALOGUE
+    dialouge_choose = 0
+    end = False
 
     blind += 1 # increases the blind each time, everytime it hits 3 resets to 1 and adds 1 to anti
     if blind > 3:
         blind = 1
         anti += 1
+    if anti > 3:
+        end = True
+
+    print()
+    dialouge_choose = random.randint(0,4)
+    if blind == 3 and anti == 3:
+        slow_print("...")
+        print()
+        slow_print("...")
+        print()
+        slow_print("...")
+        print()
+        slow_print("A royal presence blesses your arrival...")
+        print()
+        slow_print(KING_DIALOGUE[0][dialouge_choose])
+    else:
+        slow_print(BLIND_DIALOGUE[blind][dialouge_choose])
+        slow_print("Spoke the blind~")
 
     boss_hp = BLIND_BASE_CHIPS[anti - 1]*BLIND_MULTIPLIERS[blind-1][0] # hp is set on the anti and blind, using the base chips and multipliers above
-    return boss_hp
 
 def card_print(suit,rank,order): # card print function, just makes things easy!
     return(["|"+suit+"¯¯| ","| "+rank+" | ","|__"+suit+"| ","  "+str(order)+"   "])
@@ -168,7 +262,6 @@ def new_deck(): # makes a new deck
     #print(card_deck) # DEBUG
 
     # cards are lists that store values in this order - Suit, Suit Icon, Rank, Rank Icon, Card Value (for scoring), and priority order from 2 - A.
-
 
 def hand_deal(amount): # deals you the hand
     global card_deck_print # to refer to print the cards.
@@ -205,18 +298,17 @@ def gameplay(): # main gameplay loop
     # local variables and loops
     global order_state
     global boss_hp
-    global money
     global joker_deck
     global card_deck_print
     global DISCARD_PLAYS
     global HAND_PLAYS
+    global BLIND_DIALOGUE
+    global KING_DIALOGUE
     selection_list = []
     chosen_cards = []
     card_removal = []
     chips = []
     valid_check = 0
-    discards = DISCARD_PLAYS
-    hands = HAND_PLAYS
     damage = 0
 
     game_loop = True
@@ -224,10 +316,20 @@ def gameplay(): # main gameplay loop
     card_selection_loop = True
     play_discard_loop = True
     validity = False
+    game_end = False
 
     new_deck()
     blind_maker()
     hand.clear()
+    dialouge_choose = random.randint(0,4)
+
+    hands = HAND_PLAYS
+    if "Juggler" in joker_deck:
+        hands += 1
+    discards = DISCARD_PLAYS
+    if "Drunkard" in joker_deck:
+        discards += 1
+
     while game_loop == True: # main game loop begin
         # just stuff to define each loop back
         print()
@@ -313,7 +415,8 @@ def gameplay(): # main gameplay loop
                         card_selection_loop = False
                         # this code removes selected cards from hand
                         for i in card_removal:
-                            hand.remove(i)
+                            if i in hand:
+                               hand.remove(i)
                 while play_discard_loop == True: # error fixing
                     try:
                         print("Do you want to play them or discard them? (1 to Play, 2 to Discard)")
@@ -322,7 +425,7 @@ def gameplay(): # main gameplay loop
                             if hands > 0:
                                 # just sees the score amt and then reduces the score required to beat and hands
                                 hands = hands - 1
-                                damage = score_calculation(chosen_cards)
+                                damage = score_calculation(chosen_cards,hands)
                                 boss_hp = boss_hp - damage
                                 play_discard_loop = False
                             else:
@@ -339,45 +442,81 @@ def gameplay(): # main gameplay loop
             else: # error checking
                 print("Please select either '1' or '2'!")
         if hands <= 0:
-            print("Hands ran out! You lost.")
+            slow_print(BLIND_DIALOGUE[3][dialouge_choose])
             quit()
         elif boss_hp <= 0:
-            print()
-            print("Defeated blind!")
-            money = int(round(BLIND_MULTIPLIERS[blind-1][2] + hands + ((5/100) * money)))
-            shop()
+            if blind == 3 and anti == 3:
+                print()
+                slow_print("""“n-no… this can’t be…”
+“a jester… victorious?!”
+
+“impossible… my crown… my stage… stolen!”
+
+“you… you dare…! this is not the end!”
+
+“curse you… fool… cursed fool!”
+
+“how… how did you… rise above…?!”
+
+---
+
+Silence falls. The king is defeated.
+
+The doors creak open… light spills into the dungeon.
+
+You are free… the blinds scatter into nothingness.
+
+The dungeon trembles… the jokers watch in awe.
+
+At last… the jester walks unbound.""")
+                quit()
+            else:
+                print()
+                slow_print(BLIND_DIALOGUE[4][dialouge_choose])
+                slow_print("You successfully took down the blind!")
+                shop()
         else:
             game_loop = True
 
 def shop():
-    global money
     global joker_deck
     global JOKER_DRAW
+    global JOKER_SHOP_DIALOGUE
     selection_list = []
     deletion = ""
     joker_rarity = 0
     joker_generated = 0
     selection = 0
+    dialouge_choose = random.randint(0, 9)
 
     selection_loop = True
     error_message = False
     input_loop = True
 
-    print("Welcome to the shop!")
-    for i in range(JOKER_DRAW): # draws 4 random jokers from the pile that is avaliable.
+    print()
+    slow_print("You continue your journey, and slowly arrive to a dungeon — similar to the one you were kept in... but bigger?")
+    slow_print(JOKER_SHOP_DIALOGUE[dialouge_choose])
+    slow_print("Some jokers slowly surround you...\nThey seem willing to help.")
+    while len(selection_list) < JOKER_DRAW: # draws 4 random jokers from the pile that is avaliable.
         joker_rarity = random.randint(1,100)
         if joker_rarity <= 60:
             joker_generated = random.randint(0,len(JOKERS[0][1])-1)
-            selection_list.append(JOKERS[0][1][joker_generated])
+            if JOKERS[0][1][joker_generated] not in selection_list:
+                selection_list.append(JOKERS[0][1][joker_generated])
         elif joker_rarity <= 90:
             joker_generated = random.randint(0,len(JOKERS[1][1])-1)
-            selection_list.append(JOKERS[1][1][joker_generated])
+            if JOKERS[1][1][joker_generated] not in selection_list:
+                selection_list.append(JOKERS[1][1][joker_generated])
         elif joker_rarity <= 100:
             joker_generated = random.randint(0,len(JOKERS[2][1])-1)
-            selection_list.append(JOKERS[2][1][joker_generated])
+            if JOKERS[2][1][joker_generated] not in selection_list:
+                selection_list.append(JOKERS[2][1][joker_generated])
 
+    #print(selection_list) # DEBUG
     for i in range(0, len(selection_list)): # just to add a number so the user can refer to each joker when picking
+        selection_list[i] = selection_list[i][:2]
         selection_list[i].append(i + 1)
+    #print(selection_list) # DEBUG
 
     while selection_loop == True: # error fix
         try:
@@ -431,7 +570,8 @@ def shop():
 
     gameplay() # // END!! //
 
-def score_calculation(cards): # whole function to calculate the scorings!
+def score_calculation(cards,hands): # whole function to calculate the scorings!
+    global joker_deck
     chip_score = 0
     chip_mult = 0
     ranks = {}
@@ -444,16 +584,20 @@ def score_calculation(cards): # whole function to calculate the scorings!
     flush_suit = ""
     flush_scored = []
     house_pair_ranks = []
+    retriggers = []
     of_a_kind_ranks = 0
+    straight_flush_limit = 5
     straight_check = False
     royal_check = False
     full_house_check = False
     flush_check = False
-
+    wee_joker_chips = 0
     cards.sort(key=lambda x: (x[5]))
     #print(cards) # DEBUG
     print()
 
+    if "Four Fingers" in joker_deck:
+        straight_flush_limit = 4
 
     for i in range(len(cards)): # sorts the deck's ranks out
         if cards[i][5] in ranks:
@@ -485,7 +629,7 @@ def score_calculation(cards): # whole function to calculate the scorings!
         if straight[i] == straight[i - 1] + 1: # to add element 1 to the list also
             straight_count.append(straight[i])
             #print(straight_count) # DEBUG
-            if len(straight_count) >= 5: # if it hits above 5!
+            if len(straight_count) >= straight_flush_limit: # if it hits above 5!
                 straight_check = True # dont break incase of 5+ card hand
         elif straight[i] != 14:
             straight_count = [straight[i]] # if it doesnt hit straight, start new run with this
@@ -496,19 +640,24 @@ def score_calculation(cards): # whole function to calculate the scorings!
         for j in range(0, len(cards)): # this is for scoring, checks what card it is then pulls out the score value for it and adds it to scored cards!
             if cards[j][5] == straight_count[i]:
                 straight_scored.append(cards[j][5]) # add to straight score! this is seperated to avoid dupe glitches
+    #print(straight) # DEBUG
+    #print(straight_count) # DEBUG
+    #print(cards) # DEBUG
 
     # checks for flushh
-    if max(suits.values()) >= 5:
+    #print(straight_flush_limit) # DEBUG
+    #print(max(suits.values())) # DEBUG
+    if max(suits.values()) >= straight_flush_limit:
         flush_check = True
 
     for i in suits:
-        if suits[i] >= 5: # if the suit is 5+ its a flush
+        if suits[i] >= straight_flush_limit: # if the suit is 5+ its a flush
             flush_suit = i # set suit as it
             break
     #print(flush_suit) # DEBUG
     for i in cards: # gets each card
         if i[0] == flush_suit: # if the suit if it is the same
-            flush_scored.append(i[4]) # add to flush score! this is seperated to avoid dupe glitches
+            flush_scored.append(i[5]) # add to flush score! this is seperated to avoid dupe glitches
 
     # checks for royalty - just use for royal flush
     if 14 in straight and 13 in straight and 12 in straight and 11 in straight and 10 in straight:
@@ -603,16 +752,16 @@ def score_calculation(cards): # whole function to calculate the scorings!
                     scored_cards_suits.append(i[0])
                     print("Scored", i[1], i[3])
 
-    elif max(suits.values()) == 5:  # FLUSH - All cards have 1 suit
+    elif flush_check == True:  # FLUSH - All cards have 1 suit
         chip_score += POKER_HANDS["Flush"][0]
         chip_mult += POKER_HANDS["Flush"][1]
         print("Flush!")
 
         for i in range(0,len(flush_scored)):
-            scored_cards.append(flush_scored[i])
             for j in range(0,len(cards)):
-                if flush_scored[i] == cards[j][4]:
+                if flush_scored[i] == cards[j][5]:
                     time.sleep(0.3)
+                    scored_cards.append(cards[j][4])
                     scored_cards_suits.append(cards[j][0])
                     print("Scored",cards[j][1],cards[j][3])
 
@@ -680,40 +829,161 @@ def score_calculation(cards): # whole function to calculate the scorings!
 
     #print(scored_cards) # DEBUG
     # prints the cards scored and final score
+
+    # JOKERS THAT NEED RETRIGGERING - Put before hand calculation as they do count to the card count.
+    if "Dusk" in joker_deck:
+        if hands == 0:
+            for i in scored_cards:
+                retriggers.append(i)
+                print("Proc Dusk!")
+                print("Retrigger", i)
+    if "Hack" in joker_deck:
+        for i in scored_cards:
+            if i == 2 or i == 3 or i == 4 or i == 5:
+                retriggers.append(i)
+                print("Proc Hack!")
+                print("Retrigger",i)
+    if "Sock and Buskin" in joker_deck:
+        for i in scored_cards:
+            if i == 10:
+                retriggers.append(i)
+                print("Proc Sock and Buskin!")
+                print("Retrigger", i)
+    for i in retriggers:
+        scored_cards.append(i)
+    # retrigger jokers put the cards that meet their requirements in a list before adding those scoring values to the list of scored cards. May affect suits for now***
+
     for i in range(0,len(scored_cards)):
         chip_score += scored_cards[i]
     #print(chip_score,"*",chip_mult)
-    # joker calculations
+
+    # OTHER JOKER CALCULATIONS -
     if "Joker" in joker_deck:
         chip_mult += 4
         print("Proc Joker!")
-    if "Gluttonous Joker" in joker_deck:
-        for i in scored_cards_suits:
-            if i == "Club":
+    # cards based on suit
+    for i in scored_cards_suits:
+        if i == "Clubs": # clubs
+            if "Gluttonous Joker" in joker_deck:
                 chip_mult += 3
                 print("Proc Gluttonous!")
-    if "Greedy Joker" in joker_deck:
-        for i in scored_cards_suits:
-            if i == "Clubs":
+            if "Onyx Gate" in joker_deck:
+                chip_mult += 7
+                print("Proc Onyx Gate!")
+        if i == "Diamonds": # diamonds
+            if "Greedy Joker" in joker_deck:
                 chip_mult += 3
                 print("Proc Greedy!")
-    if "Lusty Joker" in joker_deck:
-        for i in scored_cards_suits:
-            if i == "Hearts":
+        if i == "Hearts": # hearts
+            bloodstone_proc = random.randint(1,3) # bloodstone has 1/2 chance of proc
+            if "Lusty Joker" in joker_deck:
                 chip_mult += 3
                 print("Proc Lusty!")
-    if "Wrathful Joker" in joker_deck:
-        for i in scored_cards_suits:
-            if i == "Spades":
+            if "Bloodstone" in joker_deck:
+                if bloodstone_proc == 1:
+                    chip_mult = chip_mult*1.5
+                    print("Proc Bloodstone!")
+        if i == "Spades": # spades
+            if "Wrathful Joker" in joker_deck:
                 chip_mult += 3
                 print("Proc Wrathful!")
+            if "Arrowhead" in joker_deck:
+                chip_score += 50
+                print("Proc Arrowhead!")
     if "Scary Face" in joker_deck:
         for i in scored_cards:
             if scored_cards == 10:
                 chip_score += 30
                 print("Proc Scary Face!")
-    print(scored_cards)
-    print(scored_cards_suits)
+    # cards based off the hand type
+    if max(ranks.values()) >= 2: # pair
+        if "Jolly Joker" in joker_deck:
+            chip_mult += 8
+            print("Proc Jolly Joker!")
+        if "Sly Joker" in joker_deck:
+            chip_score += 50
+            print("Proc Sly Joker!")
+        if "The Duo" in joker_deck:
+            chip_mult = chip_mult*2
+            print("Proc The Duo!")
+    if max(ranks.values()) >= 3: # three oak
+        if "Zany Joker" in joker_deck:
+            chip_mult += 12
+            print("Proc Zany Joker!")
+        if "Wily Joker" in joker_deck:
+            chip_score += 100
+            print("Proc Wily Joker!")
+        if "The Trio" in joker_deck:
+            chip_mult = chip_mult*3
+            print("Proc The Trio!")
+    if max(ranks.values()) >= 4: # four oak
+        if "The Family" in joker_deck:
+            chip_mult = chip_mult*4
+            print("Proc The Family!")
+    if list(ranks.values()).count(2) >= 2: # 2 pair
+        if "Mad Joker" in joker_deck:
+            chip_mult += 10
+            print("Proc Mad Joker!")
+        if "Clever Joker" in joker_deck:
+            chip_score += 80
+            print("Proc Clever Joker!")
+    if straight_check == True: # straight
+        if "Crazy Joker" in joker_deck:
+            chip_mult += 12
+            print("Proc Crazy Joker!")
+        if "Devious Joker" in joker_deck:
+            chip_score += 100
+            print("Proc Devious Joker!")
+        if "The Order" in joker_deck:
+            chip_mult = chip_mult*3
+            print("Proc The Order!")
+    if flush_check == True: # flush
+        if "Drool Joker" in joker_deck:
+            chip_mult += 10
+            print("Proc Drool Joker!")
+        if "Crafty Joker" in joker_deck:
+            chip_score += 80
+            print("Proc Crafty Joker!")
+        if "The Tribe" in joker_deck:
+            chip_mult = chip_mult*2
+            print("Proc The Tribe!")
+    if "Half Joker" in joker_deck:
+        if len(scored_cards) <= 3:
+            chip_mult += 20
+            print("Proc Half Joker!")
+    if "Misprint" in joker_deck:
+        misprint_mult = random.randint(1,24)
+        print("Proc Misprint! +", misprint_mult)
+        chip_mult += misprint_mult
+    if "Even Steven" in joker_deck:
+        for i in scored_cards:
+            if i % 2 == 0:
+                chip_mult += 4
+                print("Proc Even Steven!")
+    if "Odd Todd" in joker_deck:
+        for i in scored_cards:
+            if i % 2 != 0:
+                chip_score += 31
+                print("Proc Odd Todd!")
+    if "Scholar" in joker_deck:
+        for i in scored_cards:
+            if i == 11:
+                chip_mult += 4
+                chip_score += 20
+                print("Proc Scholar!")
+    if "Fibonacci" in joker_deck:
+        for i in scored_cards:
+            if i == 2 or i == 3 or i == 5 or i == 8 or i == 11:
+                chip_mult += 8
+                print("Proc Fibonacci!")
+    if "Wee Joker" in joker_deck:
+        for i in scored_cards:
+            if i == 2:
+                wee_joker_chips += 8
+                print("Proc Wee Joker!")
+                chip_score += wee_joker_chips
+    #print(scored_cards) # DEBUG
+    #print(scored_cards_suits) # DEBUG
     print()
     time.sleep(0.3)
     print("Scored",chip_score*chip_mult)
