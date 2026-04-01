@@ -8,9 +8,7 @@
 
 # // !! PROGRAMMER'S NOTES !! //
 # - For the best experience, please use MS Gothic or Snap ITC as your font. This is just for the card printing, as these fonts keep it even. (MS Gothic is my reccomendation)
-
-# // STORY //
-# Follows the story of Astus, a Jester from Ancient Rome.
+# - Some conventions may stray off the original balatro game.
 
 # modules
 import random
