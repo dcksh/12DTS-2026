@@ -324,7 +324,7 @@ def gameplay(): # main gameplay loop
 
     hands = HAND_PLAYS
     if "Juggler" in joker_deck:
-        hand_size = hand_size + 1
+        hand_size = HAND_SIZE + 1
     else:
         hand_size = HAND_SIZE
     discards = DISCARD_PLAYS
