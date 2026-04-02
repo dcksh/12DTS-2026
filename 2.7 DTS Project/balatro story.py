@@ -302,6 +302,7 @@ def gameplay(): # main gameplay loop
     global HAND_PLAYS
     global BLIND_DIALOGUE
     global KING_DIALOGUE
+    global HAND_SIZE
     selection_list = []
     chosen_cards = []
     card_removal = []
@@ -323,7 +324,7 @@ def gameplay(): # main gameplay loop
 
     hands = HAND_PLAYS
     if "Juggler" in joker_deck:
-        hands += 1
+        HAND_SIZE += 1
     discards = DISCARD_PLAYS
     if "Drunkard" in joker_deck:
         discards += 1
@@ -877,10 +878,6 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
             if "Lusty Joker" in joker_deck:
                 chip_mult += 3
                 print("Proc Lusty!")
-            if "Bloodstone" in joker_deck:
-                if bloodstone_proc == 1:
-                    chip_mult = chip_mult*1.5
-                    print("Proc Bloodstone!")
         if i == "Spades": # spades
             if "Wrathful Joker" in joker_deck:
                 chip_mult += 3
@@ -901,9 +898,6 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
         if "Sly Joker" in joker_deck:
             chip_score += 50
             print("Proc Sly Joker!")
-        if "The Duo" in joker_deck:
-            chip_mult = chip_mult*2
-            print("Proc The Duo!")
     if max(ranks.values()) >= 3: # three oak
         if "Zany Joker" in joker_deck:
             chip_mult += 12
@@ -911,13 +905,6 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
         if "Wily Joker" in joker_deck:
             chip_score += 100
             print("Proc Wily Joker!")
-        if "The Trio" in joker_deck:
-            chip_mult = chip_mult*3
-            print("Proc The Trio!")
-    if max(ranks.values()) >= 4: # four oak
-        if "The Family" in joker_deck:
-            chip_mult = chip_mult*4
-            print("Proc The Family!")
     if list(ranks.values()).count(2) >= 2: # 2 pair
         if "Mad Joker" in joker_deck:
             chip_mult += 10
@@ -932,9 +919,6 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
         if "Devious Joker" in joker_deck:
             chip_score += 100
             print("Proc Devious Joker!")
-        if "The Order" in joker_deck:
-            chip_mult = chip_mult*3
-            print("Proc The Order!")
     if flush_check == True: # flush
         if "Drool Joker" in joker_deck:
             chip_mult += 10
@@ -942,9 +926,6 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
         if "Crafty Joker" in joker_deck:
             chip_score += 80
             print("Proc Crafty Joker!")
-        if "The Tribe" in joker_deck:
-            chip_mult = chip_mult*2
-            print("Proc The Tribe!")
     if "Half Joker" in joker_deck:
         if len(scored_cards) <= 3:
             chip_mult += 20
@@ -980,6 +961,33 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
                 wee_joker_chips += 8
                 print("Proc Wee Joker!")
                 chip_score += wee_joker_chips
+    # mult jokers
+    if i == "Hearts":  # hearts
+        bloodstone_proc = random.randint(1, 3)  # bloodstone has 1/2 chance of proc
+        if "Bloodstone" in joker_deck:
+            if bloodstone_proc == 1:
+                chip_mult = chip_mult * 1.5
+                print("Proc Bloodstone!")
+    if max(ranks.values()) >= 2:  # pair
+        if "The Duo" in joker_deck:
+            chip_mult = chip_mult * 2
+            print("Proc The Duo!")
+    if max(ranks.values()) >= 3:  # three oak
+        if "The Trio" in joker_deck:
+            chip_mult = chip_mult * 3
+            print("Proc The Trio!")
+    if max(ranks.values()) >= 4:  # four oak
+        if "The Family" in joker_deck:
+            chip_mult = chip_mult * 4
+            print("Proc The Family!")
+    if straight_check == True:  # straight
+        if "The Order" in joker_deck:
+            chip_mult = chip_mult * 3
+            print("Proc The Order!")
+    if flush_check == True:  # flush
+        if "The Tribe" in joker_deck:
+            chip_mult = chip_mult * 2
+            print("Proc The Tribe!")
     #print(scored_cards) # DEBUG
     #print(scored_cards_suits) # DEBUG
     print()
@@ -989,3 +997,4 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
     return int(chip_score*chip_mult) # // AT ENDDD! //
 # ------------------------------- main module -------------------------------
 game_start()
+# 1000 line!
