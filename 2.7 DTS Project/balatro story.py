@@ -324,7 +324,9 @@ def gameplay(): # main gameplay loop
 
     hands = HAND_PLAYS
     if "Juggler" in joker_deck:
-        HAND_SIZE += 1
+        hand_size = hand_size + 1
+    else:
+        hand_size = HAND_SIZE
     discards = DISCARD_PLAYS
     if "Drunkard" in joker_deck:
         discards += 1
@@ -337,7 +339,7 @@ def gameplay(): # main gameplay loop
         print("Score:", boss_hp)
         print("Jokers:",joker_deck)
         order_state = 1
-        hand_deal(HAND_SIZE - len(hand))
+        hand_deal(hand_size - len(hand))
         print("Hands:",hands,"—","Discards:",discards)
 
         game_loop = False
@@ -997,4 +999,3 @@ def score_calculation(cards,hands): # whole function to calculate the scorings!
     return int(chip_score*chip_mult) # // AT ENDDD! //
 # ------------------------------- main module -------------------------------
 game_start()
-# 1000 line!
